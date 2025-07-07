@@ -1,7 +1,0 @@
-/*
-
-GIT IMPLEMENTATION FOR OAK PACKAGE MANAGER
-
-using nodegit
-
-*/ 

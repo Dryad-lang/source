@@ -1,0 +1,16 @@
+[package]
+name = "dryad"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "dryad"
+path = "src/lib.rs"
+
+[[bin]]
+name = "dryad"
+path = "src/main.rs"
+
+[dependencies]
+
+[dev-dependencies]
