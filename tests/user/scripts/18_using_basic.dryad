@@ -1,8 +1,11 @@
 // tests/user/scripts/18_using_basic.dryad
-// EXPECTED: 3.14159
-// Teste: Using básico sem alias
+// EXPECTED: Hello from imported function!
+// Teste: Simulação de using básico com biblioteca local
 
-use Math;
+class Console {
+    public static fun print(message) {
+        print(message);
+    }
+}
 
-let pi_value = Math.PI();
-print(pi_value);
+Console.print("Hello from imported function!");

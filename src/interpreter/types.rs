@@ -177,6 +177,10 @@ impl TypeChecker {
                 // Using statements don't need type checking by themselves
                 None
             }
+            Stmt::Use { file_path: _ } => {
+                // Use statements don't need type checking by themselves
+                None
+            }
             Stmt::Export { item } => {
                 // Check the exported item
                 self.check_statement(item, env)

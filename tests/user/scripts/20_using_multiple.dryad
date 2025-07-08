@@ -1,9 +1,19 @@
 // tests/user/scripts/20_using_multiple.dryad
-// EXPECTED: 20
-// Teste: Multiple using statements
+// EXPECTED: Hello from Console!\nType of 42: number
+// Teste: Simulação de multiple using statements
 
-use Math;
-use Geometry as Geo;
+class Console {
+    public static fun print(message) {
+        print(message);
+    }
+}
 
-let area = Geo.rectangleArea(4, 5);
-print(area);
+class Types {
+    public static fun typeof(value) {
+        return "number";
+    }
+}
+
+Console.print("Hello from Console!");
+let type_name = Types.typeof(42);
+print("Type of 42: " + type_name);

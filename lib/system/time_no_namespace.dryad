@@ -1,0 +1,64 @@
+// lib/system/time_no_namespace.dryad
+// Módulo para operações de tempo, delays e timestamps (sem namespace)
+
+class Time {
+    // Obter timestamp atual (Unix timestamp)
+    public static fun now() {
+        return native_time_now();
+    }
+    
+    // Obter timestamp em milissegundos
+    public static fun nowMillis() {
+        return native_time_now_millis();
+    }
+    
+    // Obter timestamp em nanossegundos (alta precisão)
+    public static fun nowNanos() {
+        return native_time_now_nanos();
+    }
+    
+    // Pausar execução por X segundos
+    public static fun sleep(seconds) {
+        return native_time_sleep(seconds);
+    }
+    
+    // Pausar execução por X milissegundos
+    public static fun sleepMillis(milliseconds) {
+        return native_time_sleep_millis(milliseconds);
+    }
+    
+    // Pausar execução por X microssegundos
+    public static fun sleepMicros(microseconds) {
+        return native_time_sleep_micros(microseconds);
+    }
+    
+    // Formatar timestamp para string legível
+    public static fun format(timestamp, format) {
+        return native_time_format(timestamp, format);
+    }
+    
+    // Converter timestamp para estrutura de data
+    public static fun toDate(timestamp) {
+        return native_time_to_date(timestamp);
+    }
+    
+    // Converter estrutura de data para timestamp
+    public static fun fromDate(year, month, day, hour, minute, second) {
+        return native_time_from_date(year, month, day, hour, minute, second);
+    }
+    
+    // Medição de performance
+    public static fun startTimer() {
+        return native_time_start_timer();
+    }
+    
+    // Finalizar timer e obter tempo decorrido
+    public static fun endTimer(timer_id) {
+        return native_time_end_timer(timer_id);
+    }
+    
+    // Obter tempo decorrido sem finalizar timer
+    public static fun elapsed(timer_id) {
+        return native_time_elapsed(timer_id);
+    }
+}

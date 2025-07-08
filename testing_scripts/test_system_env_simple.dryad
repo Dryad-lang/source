@@ -1,0 +1,39 @@
+// test_system_env_simple.dryad
+// Teste simples para o módulo Environment
+
+namespace System {
+    export class Environment {
+        public static fun get(name) {
+            return "mock_value_for_" + name;
+        }
+        
+        public static fun set(name, value) {
+            return "Set " + name + " to " + value;
+        }
+        
+        public static fun exists(name) {
+            return true;
+        }
+        
+        public static fun hasVar(name) {
+            return Environment.exists(name);
+        }
+    }
+}
+
+// Testar o módulo Environment
+print("Testing System.Environment:");
+
+let result1 = System.Environment.get("PATH");
+print("Get PATH: " + result1);
+
+let result2 = System.Environment.set("TEST_VAR", "test_value");
+print("Set result: " + result2);
+
+let result3 = System.Environment.exists("TEST_VAR");
+print("Exists result: " + result3);
+
+let result4 = System.Environment.hasVar("TEST_VAR");
+print("HasVar result: " + result4);
+
+print("System.Environment test completed!");

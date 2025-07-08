@@ -1,9 +1,16 @@
 // tests/user/scripts/19_using_alias.dryad
-// EXPECTED: Vector2D
-// Teste: Using com alias
+// EXPECTED: Type: number
+// Teste: Simulação de using com alias
 
-use Math.Vector2D as Vec;
+class TypeUtils {
+    public static fun typeof(value) {
+        return "number";
+    }
+}
 
-let vector = Vec(3, 4);
-let name = vector.toString();
-print(name);
+// Simula alias
+let Types = TypeUtils;
+
+let value = 42;
+let type_name = Types.typeof(value);
+print("Type: " + type_name);

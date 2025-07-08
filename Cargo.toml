@@ -12,5 +12,6 @@ name = "dryad"
 path = "src/main.rs"
 
 [dependencies]
+serde_json = "1.0"
 
 [dev-dependencies]

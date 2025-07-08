@@ -5,6 +5,7 @@ pub enum Token {
     // Palavras-chave
     Let,
     Fun,
+    Function,
     If,
     Else,
     For,
@@ -12,6 +13,7 @@ pub enum Token {
     Return,
     Export,
     Use,
+    Using,
     Class,
     New,
     This,

@@ -1,0 +1,48 @@
+// tests/user/scripts/33_organized_imports.dryad
+// EXPECTED: User: test_user\nPlatform: Windows\nFile created successfully
+// Teste: Simulação de organização adequada de "imports" por categoria
+
+// Simulações de módulos de sistema
+class Environment {
+    public static fun getEnv(key, defaultValue) {
+        return defaultValue;
+    }
+}
+
+class Platform {
+    public static fun getOS() {
+        return "Windows";
+    }
+}
+
+// Simulações de módulos de IO
+class FileSystem {
+    public static fun writeFile(filename, content) {
+        return true;
+    }
+}
+
+class Console {
+    public static fun print(message) {
+        print(message);
+    }
+}
+
+// Simulações de utilitários
+class Types {
+    public static fun typeof(value) {
+        return "string";
+    }
+}
+
+// Uso dos "imports" organizadamente
+let user = Environment.getEnv("USER", "test_user");
+let platform = Platform.getOS();
+
+Console.print("User: " + user);
+Console.print("Platform: " + platform);
+
+// Cria arquivo com informações do sistema
+let system_info = "User: " + user + "\nPlatform: " + platform;
+FileSystem.writeFile("system_info.txt", system_info);
+print("File created successfully");

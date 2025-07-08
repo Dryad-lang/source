@@ -1,0 +1,109 @@
+// lib/IO/buffer.dryad
+// Módulo de manipulação de buffers para Dryad
+
+namespace IO {
+    export class Buffer {
+        // Criação de buffers
+        public static fun create(size) {
+            return native_buffer_create(size);
+        }
+        
+        public static fun createFrom(data) {
+            return native_buffer_create_from(data);
+        }
+        
+        public static fun createEmpty() {
+            return native_buffer_create_empty();
+        }
+        
+        // Informações do buffer
+        public static fun length(buffer) {
+            return native_buffer_length(buffer);
+        }
+        
+        public static fun size(buffer) {
+            return native_buffer_size(buffer);
+        }
+        
+        public static fun capacity(buffer) {
+            return native_buffer_capacity(buffer);
+        }
+        
+        // Manipulação de dados
+        public static fun append(buffer, data) {
+            return native_buffer_append(buffer, data);
+        }
+        
+        public static fun prepend(buffer, data) {
+            return native_buffer_prepend(buffer, data);
+        }
+        
+        public static fun insert(buffer, position, data) {
+            return native_buffer_insert(buffer, position, data);
+        }
+        
+        public static fun remove(buffer, position, length) {
+            return native_buffer_remove(buffer, position, length);
+        }
+        
+        public static fun clear(buffer) {
+            return native_buffer_clear(buffer);
+        }
+        
+        // Acesso a dados
+        public static fun get(buffer, position) {
+            return native_buffer_get(buffer, position);
+        }
+        
+        public static fun set(buffer, position, value) {
+            return native_buffer_set(buffer, position, value);
+        }
+        
+        public static fun slice(buffer, start, end) {
+            return native_buffer_slice(buffer, start, end);
+        }
+        
+        public static fun copy(buffer) {
+            return native_buffer_copy(buffer);
+        }
+        
+        // Busca e comparação
+        public static fun indexOf(buffer, value) {
+            return native_buffer_index_of(buffer, value);
+        }
+        
+        public static fun lastIndexOf(buffer, value) {
+            return native_buffer_last_index_of(buffer, value);
+        }
+        
+        public static fun contains(buffer, value) {
+            return native_buffer_contains(buffer, value);
+        }
+        
+        public static fun equals(buffer1, buffer2) {
+            return native_buffer_equals(buffer1, buffer2);
+        }
+        
+        // Conversões
+        public static fun toString(buffer) {
+            return native_buffer_to_string(buffer);
+        }
+        
+        public static fun toArray(buffer) {
+            return native_buffer_to_array(buffer);
+        }
+        
+        public static fun toBytes(buffer) {
+            return native_buffer_to_bytes(buffer);
+        }
+        
+        // Validação
+        public static fun isEmpty(buffer) {
+            return native_buffer_is_empty(buffer);
+        }
+        
+        public static fun isValid(buffer) {
+            return native_buffer_is_valid(buffer);
+        }
+    }
+}

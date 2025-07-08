@@ -103,6 +103,9 @@ pub enum Stmt {
         module_path: String,
         alias: Option<String>,
     },
+    Use {
+        file_path: String,
+    },
     Export {
         item: Box<Stmt>,
     },

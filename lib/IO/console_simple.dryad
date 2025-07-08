@@ -1,0 +1,10 @@
+// lib/IO/console_simple.dryad
+// Simple console module for demonstration
+
+export function println(message) {
+    print(message);
+}
+
+export function log(level, message) {
+    print("[" + level + "] " + message);
+}

@@ -1,0 +1,29 @@
+// tests/user/scripts/30_multiple_imports_static.dryad
+// EXPECTED: Testing multiple modules\nHello World\ntrueWindows
+// Teste: Simulação de múltiplos módulos com métodos estáticos
+
+class Console {
+    public static fun print(message) {
+        print(message);
+    }
+}
+
+class Types {
+    public static fun toBoolean(str) {
+        return true;
+    }
+}
+
+class Platform {
+    public static fun getOS() {
+        return "Windows";
+    }
+}
+
+Console.print("Testing multiple modules");
+Console.print("Hello World");
+
+let bool_result = Types.toBoolean("true");
+let platform_name = Platform.getOS();
+
+print(bool_result + platform_name);

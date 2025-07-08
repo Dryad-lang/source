@@ -1,0 +1,181 @@
+// test_system_modules.dryad
+// Teste abrangente para todos os módulos do sistema
+
+// Test 1: System.Environment - Variáveis de ambiente
+class EnvironmentTests {
+    public static fun runTests() {
+        print("=== Testing System.Environment ===");
+        
+        // Definir uma variável de ambiente de teste
+        Environment.set("DRYAD_TEST", "test_value");
+        
+        // Verificar se foi definida
+        let exists = Environment.exists("DRYAD_TEST");
+        print("Environment variable exists: " + exists);
+        
+        // Obter o valor
+        let value = Environment.get("DRYAD_TEST");
+        print("Environment variable value: " + value);
+        
+        // Testar aliases
+        let hasVar = Environment.hasVar("DRYAD_TEST");
+        print("Has variable (alias): " + hasVar);
+        
+        // Remover a variável
+        Environment.remove("DRYAD_TEST");
+        let removedExists = Environment.exists("DRYAD_TEST");
+        print("After removal, exists: " + removedExists);
+        
+        print("Environment tests completed");
+    }
+}
+
+// Test 2: System.Process - Execução de comandos
+class ProcessTests {
+    public static fun runTests() {
+        print("=== Testing System.Process ===");
+        
+        // Obter PID atual
+        let currentPid = Process.getCurrentPid();
+        print("Current PID: " + currentPid);
+        
+        // Testar alias
+        let pid = Process.getPid();
+        print("PID (alias): " + pid);
+        
+        // Executar comando simples (echo ou equivalente multiplataforma)
+        let result = Process.execute("echo 'Hello from process'");
+        print("Command result: " + result);
+        
+        // Testar alias de execução
+        let result2 = Process.run("echo 'Hello from alias'");
+        print("Alias result: " + result2);
+        
+        print("Process tests completed");
+    }
+}
+
+// Test 3: System.Time - Tempo e delays
+class TimeTests {
+    public static fun runTests() {
+        print("=== Testing System.Time ===");
+        
+        // Obter timestamp atual
+        let now = Time.now();
+        print("Current timestamp: " + now);
+        
+        // Obter timestamp em milissegundos
+        let nowMillis = Time.nowMillis();
+        print("Current timestamp (millis): " + nowMillis);
+        
+        // Testar alias
+        let currentTime = Time.getCurrentTime();
+        print("Current time (alias): " + currentTime);
+        
+        // Testar timer de performance
+        let timer = Time.startTimer();
+        print("Timer started: " + timer);
+        
+        // Pequeno delay (100ms)
+        Time.sleepMillis(100);
+        
+        let elapsed = Time.elapsed(timer);
+        print("Elapsed time: " + elapsed + "ms");
+        
+        // Formatar timestamp atual
+        let formatted = Time.formatNow("YYYY-MM-DD");
+        print("Formatted date: " + formatted);
+        
+        print("Time tests completed");
+    }
+}
+
+// Test 4: System.Platform - Informações da plataforma
+class PlatformTests {
+    public static fun runTests() {
+        print("=== Testing System.Platform ===");
+        
+        // Obter informações básicas do sistema
+        let os = Platform.getOS();
+        print("Operating System: " + os);
+        
+        let arch = Platform.getArch();
+        print("Architecture: " + arch);
+        
+        let hostname = Platform.getHostname();
+        print("Hostname: " + hostname);
+        
+        // Testar aliases
+        let operatingSystem = Platform.getOperatingSystem();
+        print("OS (alias): " + operatingSystem);
+        
+        let architecture = Platform.getArchitecture();
+        print("Arch (alias): " + architecture);
+        
+        // Testar verificações de plataforma
+        let isWindows = Platform.isWindows();
+        let isLinux = Platform.isLinux();
+        let isMacOS = Platform.isMacOS();
+        let isUnix = Platform.isUnix();
+        
+        print("Is Windows: " + isWindows);
+        print("Is Linux: " + isLinux);
+        print("Is macOS: " + isMacOS);
+        print("Is Unix-like: " + isUnix);
+        
+        // Informações de CPU e memória
+        let cpuCores = Platform.getCPUCores();
+        print("CPU cores: " + cpuCores);
+        
+        let totalMemory = Platform.getTotalMemory();
+        print("Total memory: " + totalMemory);
+        
+        print("Platform tests completed");
+    }
+}
+
+// Test 5: Teste de integração - usando múltiplos módulos
+class IntegrationTests {
+    public static fun runTests() {
+        print("=== Integration Tests ===");
+        
+        // Combinar informações de plataforma com variáveis de ambiente
+        let os = Platform.getOS();
+        Environment.set("DRYAD_DETECTED_OS", os);
+        let detectedOS = Environment.get("DRYAD_DETECTED_OS");
+        print("Detected OS from env: " + detectedOS);
+        
+        // Usar timer para medir execução de comando
+        let timer = Time.startTimer();
+        let result = Process.execute("echo 'Timed execution'");
+        let elapsed = Time.elapsed(timer);
+        print("Command executed in: " + elapsed + "ms");
+        print("Command result: " + result);
+        
+        // Limpar variável de teste
+        Environment.remove("DRYAD_DETECTED_OS");
+        
+        print("Integration tests completed");
+    }
+}
+
+// Executar todos os testes
+print("Starting System Module Tests...");
+print("");
+
+EnvironmentTests.runTests();
+print("");
+
+ProcessTests.runTests();
+print("");
+
+TimeTests.runTests();
+print("");
+
+PlatformTests.runTests();
+print("");
+
+IntegrationTests.runTests();
+print("");
+
+print("All system module tests completed successfully!");

@@ -1,0 +1,223 @@
+// test_system_complete.dryad
+// Teste completo dos módulos do sistema (sem namespace)
+
+// Implementações mock dos módulos do sistema para testes
+
+class Environment {
+    public static fun get(name) {
+        return "mock_value";
+    }
+    
+    public static fun set(name, value) {
+        return "success";
+    }
+    
+    public static fun exists(name) {
+        return true;
+    }
+    
+    public static fun getVar(name) {
+        return Environment.get(name);
+    }
+    
+    public static fun hasVar(name) {
+        return Environment.exists(name);
+    }
+    
+    public static fun getPath() {
+        return Environment.get("PATH");
+    }
+    
+    public static fun getHome() {
+        return Environment.get("HOME");
+    }
+}
+
+class Process {
+    public static fun execute(command) {
+        return "Command executed successfully";
+    }
+    
+    public static fun getCurrentPid() {
+        return 12345;
+    }
+    
+    public static fun run(command) {
+        return Process.execute(command);
+    }
+    
+    public static fun getPid() {
+        return Process.getCurrentPid();
+    }
+}
+
+class Time {
+    public static fun now() {
+        return 1672531200;
+    }
+    
+    public static fun nowMillis() {
+        return 1672531200000;
+    }
+    
+    public static fun getCurrentTime() {
+        return Time.now();
+    }
+    
+    public static fun startTimer() {
+        return 1;
+    }
+    
+    public static fun elapsed(timer_id) {
+        return 100;
+    }
+    
+    public static fun format(timestamp, format) {
+        return "2023-01-01";
+    }
+    
+    public static fun formatNow(format) {
+        return Time.format(Time.now(), format);
+    }
+}
+
+class Platform {
+    public static fun getOS() {
+        return "Windows";
+    }
+    
+    public static fun getArch() {
+        return "x86_64";
+    }
+    
+    public static fun getHostname() {
+        return "test-machine";
+    }
+    
+    public static fun isWindows() {
+        let os = Platform.getOS();
+        return os == "Windows";
+    }
+    
+    public static fun isLinux() {
+        let os = Platform.getOS();
+        return os == "Linux";
+    }
+    
+    public static fun getCPUCores() {
+        return 8;
+    }
+    
+    public static fun getOperatingSystem() {
+        return Platform.getOS();
+    }
+}
+
+// Executar testes
+print("=== System Module Tests ===");
+print("");
+
+// Test Environment
+print("Testing Environment module:");
+let envValue = Environment.get("TEST");
+print("Environment.get result:");
+print(envValue);
+
+let envExists = Environment.exists("TEST");
+print("Environment.exists result:");
+print(envExists);
+
+let envPath = Environment.getPath();
+print("Environment.getPath result:");
+print(envPath);
+
+let envHasVar = Environment.hasVar("TEST");
+print("Environment.hasVar result:");
+print(envHasVar);
+
+print("");
+
+// Test Process
+print("Testing Process module:");
+let processResult = Process.execute("echo hello");
+print("Process.execute result:");
+print(processResult);
+
+let processPid = Process.getCurrentPid();
+print("Process.getCurrentPid result:");
+print(processPid);
+
+let processRun = Process.run("test");
+print("Process.run result:");
+print(processRun);
+
+print("");
+
+// Test Time
+print("Testing Time module:");
+let timeNow = Time.now();
+print("Time.now result:");
+print(timeNow);
+
+let timeMillis = Time.nowMillis();
+print("Time.nowMillis result:");
+print(timeMillis);
+
+let timeFormatted = Time.formatNow("YYYY-MM-DD");
+print("Time.formatNow result:");
+print(timeFormatted);
+
+let timer = Time.startTimer();
+print("Time.startTimer result:");
+print(timer);
+
+let elapsed = Time.elapsed(timer);
+print("Time.elapsed result:");
+print(elapsed);
+
+print("");
+
+// Test Platform
+print("Testing Platform module:");
+let platformOS = Platform.getOS();
+print("Platform.getOS result:");
+print(platformOS);
+
+let platformArch = Platform.getArch();
+print("Platform.getArch result:");
+print(platformArch);
+
+let platformHostname = Platform.getHostname();
+print("Platform.getHostname result:");
+print(platformHostname);
+
+let platformIsWindows = Platform.isWindows();
+print("Platform.isWindows result:");
+print(platformIsWindows);
+
+let platformIsLinux = Platform.isLinux();
+print("Platform.isLinux result:");
+print(platformIsLinux);
+
+let platformCores = Platform.getCPUCores();
+print("Platform.getCPUCores result:");
+print(platformCores);
+
+print("");
+
+// Integration test
+print("Integration test:");
+let detectedOS = Platform.getOperatingSystem();
+print("Detected OS:");
+print(detectedOS);
+
+let currentTime = Time.getCurrentTime();
+print("Current time:");
+print(currentTime);
+
+let processId = Process.getPid();
+print("Process ID:");
+print(processId);
+
+print("");
+print("All system module tests completed successfully!");

@@ -400,6 +400,42 @@ impl Evaluator {
                 
                 EvaluationResult::new(Some(Value::Null))
             }
+
+            Stmt::Use { file_path } => {
+                // Load file relative to current script
+                let module_result = {
+                    self.module_loader.load_file(file_path)
+                };
+                
+                match module_result {
+                    Ok(statements) => {
+                        // Execute module statements in current environment
+                        let mut module_env = Env::new();
+                        for stmt in &statements {
+                            let result = self.eval_stmt(stmt, &mut module_env);
+                            if !result.errors.is_empty() {
+                                return result;
+                            }
+                        }
+                        
+                        // Import all exported items from the module directly into current scope
+                        let exported_items = module_env.get_all_exported();
+                        for (name, value) in &exported_items {
+                            env.set(name.clone(), value.clone());
+                        }
+                    }
+                    Err(e) => {
+                        let error = DryadError::new(
+                            format!("Failed to load file '{}': {}", file_path, e),
+                            None,
+                            crate::interpreter::errors::ErrorSeverity::Error,
+                        );
+                        return EvaluationResult::with_error(error);
+                    }
+                }
+                
+                EvaluationResult::new(Some(Value::Null))
+            }
             
             Stmt::Export { item } => {
                 // Evaluate the item and export it

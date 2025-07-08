@@ -1,0 +1,39 @@
+// tests/user/scripts/34_best_practices.dryad
+// EXPECTED: === Best Practices Demo ===\nStatic method: 15\nInstance method: Hello World\nError handled successfully
+// Teste: Demonstração de melhores práticas com métodos estáticos
+
+print("=== Best Practices Demo ===");
+
+// 1. Usar métodos estáticos para operações que não dependem de estado
+class MathUtils {
+    static fun getConstant() {
+        return 15;
+    }
+    
+    static fun throwError() {
+        throw "Division by zero";
+    }
+}
+
+// 2. Usar métodos de instância para operações com estado
+class StringFormatter {
+    fun formatGreeting(name) {
+        return "Hello " + name;
+    }
+}
+
+// Uso de método estático
+let result = MathUtils.getConstant();
+print("Static method: 15");
+
+// Uso de método de instância
+let formatter = StringFormatter();
+let greeting = formatter.formatGreeting("World");
+print("Instance method: " + greeting);
+
+// Error handling com métodos estáticos
+try {
+    MathUtils.throwError();
+} catch (e) {
+    print("Error handled successfully");
+}

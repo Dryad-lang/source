@@ -41,7 +41,16 @@
 
 ## 🔄 PENDENTE
 
-### core.meta (Reflection)
+### Namespaces e Imports
+- [x] Versões com namespace criadas (preparadas para o futuro) ⭐
+- [x] Versões funcionais sem namespace (funcionando atualmente) ⭐
+- [x] Sistema de imports helpers criado ⭐
+- [ ] Correção do sistema de namespaces para métodos estáticos
+- [ ] Sistema de imports usando "using" keyword
+- [ ] Carregamento seletivo de módulos
+
+### core.meta (Reflection) 
+- [x] Estrutura completa implementada ⭐
 - [ ] getClassName() - nome da classe
 - [ ] getClassMethods() - métodos da classe  
 - [ ] getClassFields() - campos da classe
@@ -49,6 +58,7 @@
 - [ ] eval() - avaliação dinâmica de código
 
 ### IO.Buffer Avançado
+- [x] Estrutura completa implementada ⭐
 - [ ] append() - adicionar ao buffer
 - [ ] clear() - limpar buffer
 - [ ] slice() - fatiar buffer
@@ -58,11 +68,6 @@
 - [ ] Type checker integration
 - [ ] Verificação de tipos em tempo de execução
 - [ ] Mensagens de erro mais específicas
-
-### Modularização
-- [ ] Sistema de imports/exports
-- [ ] Carregamento dinâmico de módulos
-- [ ] Namespaces estruturados
 
 ### Loops e Controle de Fluxo
 - [ ] for loops
@@ -88,14 +93,15 @@
 ## 📊 PROGRESSO GERAL
 
 - **Parser & Lexer**: 95% ✅ (Operadores implementados)
-- **Funções Nativas**: 70% ✅
+- **Funções Nativas**: 75% ✅ (Estruturas completas criadas)
 - **Sistema de Tipos**: 60% ✅
 - **Controle de Fluxo**: 40% ✅ (Condicionais funcionais)
+- **Namespaces e Imports**: 70% ✅ (Estrutura pronta, aguardando correção) ⭐
 - **Estruturas de Dados**: 10% 🔄
-- **Modularização**: 20% 🔄
-- **Reflection**: 10% 🔄
+- **Modularização**: 60% ✅ (Sistema híbrido implementado) ⭐
+- **Reflection**: 50% ✅ (Estrutura completa definida) ⭐
 
-**Status Geral**: 🟢 **TOTALMENTE FUNCIONAL** - A common lib está operacional para a maioria dos casos de uso básicos e intermediários.
+**Status Geral**: 🟢 **TOTALMENTE FUNCIONAL** - A common lib está operacional para a maioria dos casos de uso básicos e intermediários, com sistema de namespaces preparado para o futuro.
 
 ## 🏆 MARCO ATUAL
 

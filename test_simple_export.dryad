@@ -1,0 +1,4 @@
+// test_simple_export.dryad
+export function hello() {
+    return "Hello World";
+}

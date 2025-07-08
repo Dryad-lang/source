@@ -1,0 +1,20 @@
+// tests/user/scripts/27_io_filesystem_static.dryad
+// EXPECTED: File operations simulated
+// Teste: Simulação de IO.FileSystem com métodos estáticos
+
+class FileSystem {
+    public static fun writeFile(filename, content) {
+        return true;  // Simula sucesso
+    }
+    
+    public static fun readFile(filename) {
+        return "File operations simulated";
+    }
+}
+
+// Cria um arquivo de teste
+FileSystem.writeFile("test_file.txt", "File content example");
+
+// Lê o arquivo de volta
+let content = FileSystem.readFile("test_file.txt");
+print(content);

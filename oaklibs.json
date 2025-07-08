@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "math-utils": "latest"
+  },
+  "description": "A Dryad project using Oak package manager",
+  "lib_paths": [
+    "./lib"
+  ],
+  "name": "my-dryad-project",
+  "version": "1.0.0"
+}

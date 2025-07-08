@@ -86,7 +86,8 @@ impl Lexer {
             ',' => Token::Comma,
             ';' => Token::Semicolon,
             '.' => Token::Dot,
-            '"' => self.read_string(),
+            '"' => self.read_string('"'),
+            '\'' => self.read_string('\''),
             ch if ch.is_ascii_digit() => self.read_number(ch),
             ch if Self::is_identifier_start(ch) => self.read_identifier(ch),
             _ => self.next_token(), // ignora caractere inválido
@@ -149,11 +150,11 @@ impl Lexer {
         Token::Number(number.parse().unwrap_or(0.0))
     }
 
-    fn read_string(&mut self) -> Token {
+    fn read_string(&mut self, delimiter: char) -> Token {
         let mut value = String::new();
 
         while let Some(ch) = self.peek() {
-            if ch == '"' {
+            if ch == delimiter {
                 self.advance();
                 break;
             }
@@ -177,12 +178,14 @@ impl Lexer {
         match ident.as_str() {
             "let" => Token::Let,
             "fun" => Token::Fun,
+            "function" => Token::Function,
             "if" => Token::If,
             "else" => Token::Else,
             "for" => Token::For,
             "while" => Token::While,
             "return" => Token::Return,
             "use" => Token::Use,
+            "using" => Token::Using,
             "export" => Token::Export,
             "class" => Token::Class,
             "new" => Token::New,

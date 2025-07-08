@@ -1,0 +1,48 @@
+// lib/system/env.dryad
+// Módulo para interação com variáveis de ambiente
+
+namespace System {
+    export class Environment {
+        // Obter valor de uma variável de ambiente
+        public static fun get(name) {
+            return native_env_get(name);
+        }
+        
+        // Definir uma variável de ambiente
+        public static fun set(name, value) {
+            return native_env_set(name, value);
+        }
+        
+        // Verificar se uma variável de ambiente existe
+        public static fun exists(name) {
+            return native_env_exists(name);
+        }
+        
+        // Obter todas as variáveis de ambiente
+        public static fun getAll() {
+            return native_env_get_all();
+        }
+        
+        // Remover uma variável de ambiente
+        public static fun remove(name) {
+            return native_env_remove(name);
+        }
+        
+        // Utilitários para variáveis comuns
+        public static fun getPath() {
+            return native_env_get("PATH");
+        }
+        
+        public static fun getHome() {
+            return native_env_get("HOME");
+        }
+        
+        public static fun getUser() {
+            return native_env_get("USER");
+        }
+        
+        public static fun getTempDir() {
+            return native_env_get("TMPDIR");
+        }
+    }
+}

@@ -47,16 +47,17 @@ impl Parser {
             Token::For => self.parse_for(),
             Token::LBrace => self.parse_block(),
             Token::Class => self.parse_class(),
-            Token::Fun => self.parse_function(Visibility::Public),
+            Token::Fun | Token::Function => self.parse_function(Visibility::Public),
             Token::Namespace => self.parse_namespace(),
-            Token::Use => self.parse_using(),
+            Token::Use => self.parse_use(),
+            Token::Using => self.parse_using(),
             Token::Export => self.parse_export(),
             Token::Try => self.parse_try(),
             Token::Throw => self.parse_throw(),
             Token::Public | Token::Private | Token::Protected | Token::Static => {
                 let (visibility, is_static) = self.parse_visibility_and_static();
                 match &self.current {
-                    Token::Fun => self.parse_function_with_modifiers(visibility, is_static),
+                    Token::Fun | Token::Function => self.parse_function_with_modifiers(visibility, is_static),
                     Token::Class => self.parse_class_with_visibility(visibility),
                     _ => {
                         // Se não for fun nem class após modificadores, avança para próximo token
@@ -613,7 +614,7 @@ impl Parser {
             };
 
             match &self.current {
-                Token::Fun => {
+                Token::Fun | Token::Function => {
                     if let Some(method) = self.parse_function_with_modifiers(member_visibility, is_static) {
                         methods.push(method);
                     }
@@ -647,7 +648,7 @@ impl Parser {
     }
 
     fn parse_function(&mut self, visibility: Visibility) -> Option<Stmt> {
-        self.advance(); // consume 'fun'
+        self.advance(); // consume 'fun' or 'function'
         
         let name = match &self.current {
             Token::Identifier(name) => {
@@ -701,7 +702,7 @@ impl Parser {
     }
     
     fn parse_function_with_modifiers(&mut self, visibility: Visibility, is_static: bool) -> Option<Stmt> {
-        self.advance(); // consume 'fun'
+        self.advance(); // consume 'fun' or 'function'
         
         let name = match &self.current {
             Token::Identifier(name) => {
@@ -816,7 +817,7 @@ impl Parser {
     }
 
     fn parse_using(&mut self) -> Option<Stmt> {
-        self.advance(); // consume 'use'
+        self.advance(); // consume 'using'
         
         // Parse dotted path: Math.Utils.Something
         let mut module_path = String::new();
@@ -837,7 +838,7 @@ impl Parser {
                 }
             }
             
-            // Check for alias: use Math.Utils as MU
+            // Check for alias: using Math.Utils as MU
             let alias = if self.current == Token::Identifier("as".to_string()) {
                 self.advance(); // consume 'as'
                 if let Token::Identifier(alias_name) = &self.current {
@@ -855,6 +856,23 @@ impl Parser {
             self.matches(&Token::Semicolon);
             
             Some(Stmt::Using { module_path, alias })
+        } else {
+            None
+        }
+    }
+
+    fn parse_use(&mut self) -> Option<Stmt> {
+        self.advance(); // consume 'use'
+        
+        // Parse file path: './simpleexport.dryad'
+        if let Token::String(file_path) = &self.current {
+            let file_path = file_path.clone();
+            self.advance();
+            
+            // Consumir ponto e vírgula opcional
+            self.matches(&Token::Semicolon);
+            
+            Some(Stmt::Use { file_path })
         } else {
             None
         }

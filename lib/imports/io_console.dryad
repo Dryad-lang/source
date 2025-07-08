@@ -1,0 +1,24 @@
+// lib/imports/io_console.dryad
+// Import helper para IO.Console (versão funcional sem namespace)
+
+class Console {
+    public static fun println(message) {
+        return native_console_println(message);
+    }
+    
+    public static fun print(message) {
+        return native_console_print(message);
+    }
+    
+    public static fun input(prompt) {
+        return native_console_input(prompt);
+    }
+    
+    public static fun readLine() {
+        return native_console_input();
+    }
+    
+    public static fun clear() {
+        return native_console_clear();
+    }
+}
