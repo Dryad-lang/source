@@ -26,6 +26,7 @@ pub enum Value {
         params: Vec<String>,
         body: Stmt,
         visibility: Visibility,
+        is_static: bool,
     },
     Exception {
         message: String,
@@ -37,6 +38,7 @@ pub enum Value {
 pub struct Class {
     pub name: String,
     pub methods: HashMap<String, Value>,
+    pub static_methods: HashMap<String, Value>,
     pub fields: Vec<FieldDecl>,
 }
 
@@ -218,6 +220,7 @@ impl Class {
         Self {
             name,
             methods: HashMap::new(),
+            static_methods: HashMap::new(),
             fields,
         }
     }
@@ -225,9 +228,17 @@ impl Class {
     pub fn add_method(&mut self, name: String, method: Value) {
         self.methods.insert(name, method);
     }
+    
+    pub fn add_static_method(&mut self, name: String, method: Value) {
+        self.static_methods.insert(name, method);
+    }
 
     pub fn get_method(&self, name: &str) -> Option<Value> {
         self.methods.get(name).cloned()
+    }
+    
+    pub fn get_static_method(&self, name: &str) -> Option<Value> {
+        self.static_methods.get(name).cloned()
     }
 }
 

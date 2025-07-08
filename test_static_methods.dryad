@@ -1,0 +1,143 @@
+// test_static_methods.dryad
+// Comprehensive tests for static method functionality
+
+import IO.Console;
+import IO.FileSystem;
+
+// Test 1: Basic static method definition and calling
+class Math {
+    public static fun add(a, b) {
+        return a + b;
+    }
+    
+    public static fun multiply(a, b) {
+        return a * b;
+    }
+    
+    public static fun square(x) {
+        return Math.multiply(x, x);
+    }
+}
+
+// Test static method calls
+let result1 = Math.add(5, 3);
+Console.println("Math.add(5, 3) = " + result1);
+
+let result2 = Math.square(4);
+Console.println("Math.square(4) = " + result2);
+
+// Test 2: Static methods with visibility modifiers
+class Utils {
+    public static fun publicMethod() {
+        return "This is public";
+    }
+    
+    private static fun privateMethod() {
+        return "This is private";
+    }
+    
+    protected static fun protectedMethod() {
+        return "This is protected";
+    }
+}
+
+Console.println("Utils.publicMethod(): " + Utils.publicMethod());
+
+// Test 3: Class with mixed static and instance methods
+class Calculator {
+    let value;
+    
+    public fun constructor(initialValue) {
+        this.value = initialValue;
+    }
+    
+    // Instance method
+    public fun getValue() {
+        return this.value;
+    }
+    
+    // Instance method
+    public fun add(x) {
+        this.value = this.value + x;
+        return this;
+    }
+    
+    // Static method
+    public static fun pi() {
+        return 3.14159;
+    }
+    
+    // Static method that calls another static method
+    public static fun circleArea(radius) {
+        return Calculator.pi() * radius * radius;
+    }
+}
+
+// Test static method call on class
+let piValue = Calculator.pi();
+Console.println("Calculator.pi() = " + piValue);
+
+let area = Calculator.circleArea(5);
+Console.println("Calculator.circleArea(5) = " + area);
+
+// Test instance method call
+let calc = new Calculator(10);
+Console.println("calc.getValue() = " + calc.getValue());
+calc.add(5);
+Console.println("After add(5): " + calc.getValue());
+
+// Test 4: Error cases that should be caught
+
+// Test class for error testing
+class ErrorTestClass {
+    let instanceVar;
+    
+    public fun constructor(value) {
+        this.instanceVar = value;
+    }
+    
+    // This static method should cause an error during compilation/evaluation
+    // because it tries to access an instance variable
+    public static fun invalidStaticMethod() {
+        // This should cause an error
+        // return this.instanceVar;  // Uncomment to test error
+        return "Valid static method";
+    }
+    
+    // Instance method
+    public fun instanceMethod() {
+        return this.instanceVar;
+    }
+}
+
+// Test valid static method call
+Console.println("ErrorTestClass.invalidStaticMethod(): " + ErrorTestClass.invalidStaticMethod());
+
+// Create instance for testing
+let errorTest = new ErrorTestClass(42);
+Console.println("errorTest.instanceMethod(): " + errorTest.instanceMethod());
+
+// Test 5: Using static methods from imported libraries
+Console.println("Testing static methods from imported libraries:");
+
+// Test FileSystem static methods
+let fileExists = FileSystem.exists("test_static_methods.dryad");
+Console.println("File exists: " + fileExists);
+
+// Test 6: Nested class with static methods
+class Outer {
+    public static fun outerStaticMethod() {
+        return "Outer static method";
+    }
+    
+    class Inner {
+        public static fun innerStaticMethod() {
+            return "Inner static method";
+        }
+    }
+}
+
+// Note: Nested classes might not be fully implemented yet
+// Console.println("Outer.outerStaticMethod(): " + Outer.outerStaticMethod());
+
+Console.println("Static method tests completed successfully!");

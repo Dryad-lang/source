@@ -4,82 +4,82 @@
 namespace IO {
     export class FileSystem {
         // Operações básicas de arquivo
-        public fun readFile(filename) {
+        public static fun readFile(filename) {
             return native_fs_read_file(filename);
         }
         
-        public fun writeFile(filename, content) {
+        public static fun writeFile(filename, content) {
             return native_fs_write_file(filename, content);
         }
         
-        public fun appendFile(filename, content) {
+        public static fun appendFile(filename, content) {
             return native_fs_append_file(filename, content);
         }
         
-        public fun fileExists(filename) {
+        public static fun fileExists(filename) {
             return native_fs_file_exists(filename);
         }
         
-        public fun deleteFile(filename) {
+        public static fun deleteFile(filename) {
             return native_fs_delete_file(filename);
         }
         
         // Aliases convenientes
-        public fun read(filename) {
-            return this.readFile(filename);
+        public static fun read(filename) {
+            return FileSystem.readFile(filename);
         }
         
-        public fun write(filename, content) {
-            return this.writeFile(filename, content);
+        public static fun write(filename, content) {
+            return FileSystem.writeFile(filename, content);
         }
         
-        public fun append(filename, content) {
-            return this.appendFile(filename, content);
+        public static fun append(filename, content) {
+            return FileSystem.appendFile(filename, content);
         }
         
-        public fun exists(filename) {
-            return this.fileExists(filename);
+        public static fun exists(filename) {
+            return FileSystem.fileExists(filename);
         }
         
-        public fun delete(filename) {
-            return this.deleteFile(filename);
+        public static fun delete(filename) {
+            return FileSystem.deleteFile(filename);
         }
     }
     
     export class Directory {
         // Operações de diretório (implementação futura)
-        public fun create(path) {
+        public static fun create(path) {
             return native_fs_create_dir(path);
         }
         
-        public fun exists(path) {
+        public static fun exists(path) {
             return native_fs_dir_exists(path);
         }
         
-        public fun list(path) {
+        public static fun list(path) {
             return native_fs_list_dir(path);
         }
         
-        public fun remove(path) {
+        public static fun remove(path) {
             return native_fs_remove_dir(path);
         }
     }
     
     export class Path {
         // Utilitários de caminho (implementação futura)
-        public fun join(...parts) {
+        public static fun join(...parts) {
             return native_fs_path_join(parts);
         }
         
-        public fun basename(path) {
+        public static fun basename(path) {
             return native_fs_path_basename(path);
         }
         
-        public fun dirname(path) {
+        public static fun dirname(path) {
             return native_fs_path_dirname(path);
         }
         
-        public fun extension(path) {
+        public static fun extension(path) {
             return native_fs_path_extension(path);
         }
     }

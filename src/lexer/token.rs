@@ -18,6 +18,7 @@ pub enum Token {
     Public,
     Private,
     Protected,
+    Static,
     Namespace,
     Try,
     Catch,

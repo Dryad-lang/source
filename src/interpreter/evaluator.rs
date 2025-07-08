@@ -196,14 +196,28 @@ impl Evaluator {
                 
                 // Adicionar métodos à classe
                 for method in methods {
-                    if let Stmt::FunDecl { name: method_name, params, body, visibility } = method {
+                    if let Stmt::FunDecl { name: method_name, params, body, visibility, is_static } = method {
+                        // Validate static methods don't access instance variables
+                        if *is_static {
+                            let field_names: Vec<String> = fields.iter().map(|f| f.name.clone()).collect();
+                            if let Err(validation_error) = self.validate_static_method(body, &field_names) {
+                                return EvaluationResult::with_error(validation_error);
+                            }
+                        }
+                        
                         let method_value = Value::Function {
                             name: method_name.clone(),
                             params: params.clone(),
                             body: (**body).clone(),
                             visibility: visibility.clone(),
+                            is_static: *is_static,
                         };
-                        class.add_method(method_name.clone(), method_value);
+                        
+                        if *is_static {
+                            class.add_static_method(method_name.clone(), method_value);
+                        } else {
+                            class.add_method(method_name.clone(), method_value);
+                        }
                     }
                 }
                 
@@ -212,12 +226,13 @@ impl Evaluator {
                 EvaluationResult::new(Some(class_value))
             }
             
-            Stmt::FunDecl { name, params, body, visibility } => {
+            Stmt::FunDecl { name, params, body, visibility, is_static } => {
                 let func_value = Value::Function {
                     name: name.clone(),
                     params: params.clone(),
                     body: (**body).clone(),
                     visibility: visibility.clone(),
+                    is_static: *is_static,
                 };
                 env.set(name.clone(), func_value.clone());
                 EvaluationResult::new(Some(func_value))
@@ -245,14 +260,20 @@ impl Evaluator {
                             
                             // Processar métodos da classe
                             for method in methods {
-                                if let Stmt::FunDecl { name: method_name, params, body, visibility } = method {
+                                if let Stmt::FunDecl { name: method_name, params, body, visibility, is_static } = method {
                                     let method_value = Value::Function {
                                         name: method_name.clone(),
                                         params: params.clone(),
                                         body: *body.clone(),
                                         visibility: visibility.clone(),
+                                        is_static: *is_static,
                                     };
-                                    class.add_method(method_name.clone(), method_value);
+                                    
+                                    if *is_static {
+                                        class.add_static_method(method_name.clone(), method_value);
+                                    } else {
+                                        class.add_method(method_name.clone(), method_value);
+                                    }
                                 }
                             }
                             
@@ -260,13 +281,14 @@ impl Evaluator {
                             env.define_in_namespace(name, class_name, class_value);
                         }
                         
-                        Stmt::FunDecl { name: func_name, params, body, visibility } => {
+                        Stmt::FunDecl { name: func_name, params, body, visibility, is_static } => {
                             // Criar função com nome completo incluindo namespace
                             let func_value = Value::Function {
                                 name: format!("{}.{}", name, func_name),
                                 params: params.clone(),
                                 body: *body.clone(),
                                 visibility: visibility.clone(),
+                                is_static: *is_static,
                             };
                             env.define_in_namespace(name, func_name, func_value);
                         }
@@ -278,12 +300,13 @@ impl Evaluator {
                             
                             // Extract exported item and add to namespace
                             match item.as_ref() {
-                                Stmt::FunDecl { name: func_name, params, body, visibility } => {
+                                Stmt::FunDecl { name: func_name, params, body, visibility, is_static } => {
                                     let func_value = Value::Function {
                                         name: format!("{}.{}", name, func_name),
                                         params: params.clone(),
                                         body: *body.clone(),
                                         visibility: visibility.clone(),
+                                        is_static: *is_static,
                                     };
                                     env.define_in_namespace(name, func_name, func_value.clone());
                                     env.export_item(format!("{}.{}", name, func_name), func_value);
@@ -293,14 +316,20 @@ impl Evaluator {
                                     let mut class = Class::new(full_class_name.clone(), fields.clone());
                                     
                                     for method in methods {
-                                        if let Stmt::FunDecl { name: method_name, params, body, visibility } = method {
+                                        if let Stmt::FunDecl { name: method_name, params, body, visibility, is_static } = method {
                                             let method_value = Value::Function {
                                                 name: method_name.clone(),
                                                 params: params.clone(),
                                                 body: *body.clone(),
                                                 visibility: visibility.clone(),
+                                                is_static: *is_static,
                                             };
-                                            class.add_method(method_name.clone(), method_value);
+                                            
+                                            if *is_static {
+                                                class.add_static_method(method_name.clone(), method_value);
+                                            } else {
+                                                class.add_method(method_name.clone(), method_value);
+                                            }
                                         }
                                     }
                                     
@@ -485,6 +514,7 @@ impl Evaluator {
                         params: vec![], // Native functions handle their own params
                         body: Stmt::Block(vec![]), // Empty body for native functions
                         visibility: crate::parser::ast::Visibility::Public,
+                        is_static: false, // Native functions are not static by default
                     }))
                 } else if name.contains('.') {
                     // Se contém ponto, pode ser um caminho de namespace ou alias
@@ -765,44 +795,107 @@ impl Evaluator {
                 
                 // Verificar se obj_name é uma variável (não um namespace)
                 if let Some(obj_value) = env.get(obj_name) {
-                    // É uma variável - tratar como method call
-                    if let Value::Instance(instance_ref) = obj_value {
-                        let instance = instance_ref.borrow();
-                        
-                        if let Some(method_value) = instance.get_method(method_name) {
-                            // Avaliar argumentos
-                            let mut arg_values = Vec::new();
-                            for arg in args {
-                                let arg_result = self.eval_expr(arg, env);
-                                if !arg_result.errors.is_empty() {
-                                    return arg_result;
-                                }
-                                if let Some(val) = arg_result.value {
-                                    arg_values.push(val);
-                                }
-                            }
-                            
-                            // Chamar método com this binding
-                            if let Value::Function { params, body, .. } = method_value {
-                                let mut method_env = Env::with_this(Value::Instance(instance_ref.clone()));
-                                
-                                // Bind parâmetros
-                                for (i, param) in params.iter().enumerate() {
-                                    if let Some(arg_val) = arg_values.get(i) {
-                                        method_env.set(param.clone(), arg_val.clone());
+                    match obj_value {
+                        // Chamada de método estático em uma classe
+                        Value::Class(class_ref) => {
+                            if let Some(static_method) = class_ref.get_static_method(method_name) {
+                                // Avaliar argumentos
+                                let mut arg_values = Vec::new();
+                                for arg in args {
+                                    let arg_result = self.eval_expr(arg, env);
+                                    if !arg_result.errors.is_empty() {
+                                        return arg_result;
+                                    }
+                                    if let Some(val) = arg_result.value {
+                                        arg_values.push(val);
                                     }
                                 }
                                 
-                                // Executar corpo do método
-                                return self.eval_stmt(&body, &mut method_env);
+                                // Chamar método estático (sem this binding)
+                                if let Value::Function { params, body, is_static, .. } = static_method {
+                                    if !is_static {
+                                        let error = DryadError::new(
+                                            format!("Método '{}' não é estático", method_name),
+                                            Some((0, 0)),
+                                            ErrorSeverity::Error,
+                                        );
+                                        return EvaluationResult::with_error(error);
+                                    }
+                                    
+                                    let mut method_env = Env::new(); // Sem this binding
+                                    
+                                    // Bind parâmetros
+                                    for (i, param) in params.iter().enumerate() {
+                                        if let Some(arg_val) = arg_values.get(i) {
+                                            method_env.set(param.clone(), arg_val.clone());
+                                        }
+                                    }
+                                    
+                                    // Executar corpo do método
+                                    return self.eval_stmt(&body, &mut method_env);
+                                }
                             }
-                        } else {
+                            
                             let error = DryadError::new(
-                                format!("Método '{}' não encontrado", method_name),
+                                format!("Método estático '{}' não encontrado na classe '{}'", method_name, obj_name),
                                 Some((0, 0)),
                                 ErrorSeverity::Error,
                             );
                             return EvaluationResult::with_error(error);
+                        }
+                        
+                        // Chamada de método em uma instância
+                        Value::Instance(instance_ref) => {
+                            let instance = instance_ref.borrow();
+                            
+                            if let Some(method_value) = instance.get_method(method_name) {
+                                // Avaliar argumentos
+                                let mut arg_values = Vec::new();
+                                for arg in args {
+                                    let arg_result = self.eval_expr(arg, env);
+                                    if !arg_result.errors.is_empty() {
+                                        return arg_result;
+                                    }
+                                    if let Some(val) = arg_result.value {
+                                        arg_values.push(val);
+                                    }
+                                }
+                                
+                                // Chamar método com this binding
+                                if let Value::Function { params, body, is_static, .. } = method_value {
+                                    if is_static {
+                                        let error = DryadError::new(
+                                            format!("Não é possível chamar método estático '{}' em uma instância", method_name),
+                                            Some((0, 0)),
+                                            ErrorSeverity::Error,
+                                        );
+                                        return EvaluationResult::with_error(error);
+                                    }
+                                    
+                                    let mut method_env = Env::with_this(Value::Instance(instance_ref.clone()));
+                                    
+                                    // Bind parâmetros
+                                    for (i, param) in params.iter().enumerate() {
+                                        if let Some(arg_val) = arg_values.get(i) {
+                                            method_env.set(param.clone(), arg_val.clone());
+                                        }
+                                    }
+                                    
+                                    // Executar corpo do método
+                                    return self.eval_stmt(&body, &mut method_env);
+                                }
+                            } else {
+                                let error = DryadError::new(
+                                    format!("Método '{}' não encontrado", method_name),
+                                    Some((0, 0)),
+                                    ErrorSeverity::Error,
+                                );
+                                return EvaluationResult::with_error(error);
+                            }
+                        }
+                        
+                        _ => {
+                            // Para outros tipos, tratar como antes
                         }
                     }
                 }
@@ -998,6 +1091,109 @@ impl Evaluator {
         }
     }
 
+    /// Validates that a static method does not access instance variables or `this`
+    fn validate_static_method(&self, stmt: &Stmt, class_fields: &[String]) -> Result<(), DryadError> {
+        self.validate_static_in_stmt(stmt, class_fields)
+    }
+    
+    fn validate_static_in_stmt(&self, stmt: &Stmt, class_fields: &[String]) -> Result<(), DryadError> {
+        match stmt {
+            Stmt::Block(statements) => {
+                for stmt in statements {
+                    self.validate_static_in_stmt(stmt, class_fields)?;
+                }
+            }
+            Stmt::Let { value, .. } => {
+                self.validate_static_in_expr(value, class_fields)?;
+            }
+            Stmt::Assign { value, .. } => {
+                self.validate_static_in_expr(value, class_fields)?;
+            }
+            Stmt::If { cond, then_branch, else_branch } => {
+                self.validate_static_in_expr(cond, class_fields)?;
+                self.validate_static_in_stmt(then_branch, class_fields)?;
+                if let Some(else_branch) = else_branch {
+                    self.validate_static_in_stmt(else_branch, class_fields)?;
+                }
+            }
+            Stmt::While { cond, body } => {
+                self.validate_static_in_expr(cond, class_fields)?;
+                self.validate_static_in_stmt(body, class_fields)?;
+            }
+            Stmt::Return(Some(expr)) => {
+                self.validate_static_in_expr(expr, class_fields)?;
+            }
+            Stmt::Expr(expr) => {
+                self.validate_static_in_expr(expr, class_fields)?;
+            }
+            _ => {} // Other statements are fine
+        }
+        Ok(())
+    }
+    
+    fn validate_static_in_expr(&self, expr: &Expr, class_fields: &[String]) -> Result<(), DryadError> {
+        match expr {
+            Expr::This => {
+                return Err(DryadError::new(
+                    "Métodos estáticos não podem acessar 'this'".to_string(),
+                    Some((0, 0)),
+                    ErrorSeverity::Error,
+                ));
+            }
+            Expr::Identifier(name) => {
+                if class_fields.contains(name) {
+                    return Err(DryadError::new(
+                        format!("Método estático não pode acessar a variável de instância '{}'", name),
+                        Some((0, 0)),
+                        ErrorSeverity::Error,
+                    ));
+                }
+            }
+            Expr::Get { object, name } => {
+                // Check if accessing this.field
+                if let Expr::This = **object {
+                    return Err(DryadError::new(
+                        format!("Método estático não pode acessar 'this.{}'", name),
+                        Some((0, 0)),
+                        ErrorSeverity::Error,
+                    ));
+                }
+                self.validate_static_in_expr(object, class_fields)?;
+            }
+            Expr::Set { object, value, .. } => {
+                // Check if setting this.field
+                if let Expr::This = **object {
+                    return Err(DryadError::new(
+                        "Método estático não pode modificar campos de instância".to_string(),
+                        Some((0, 0)),
+                        ErrorSeverity::Error,
+                    ));
+                }
+                self.validate_static_in_expr(object, class_fields)?;
+                self.validate_static_in_expr(value, class_fields)?;
+            }
+            Expr::Binary { left, right, .. } => {
+                self.validate_static_in_expr(left, class_fields)?;
+                self.validate_static_in_expr(right, class_fields)?;
+            }
+            Expr::Unary { expr, .. } => {
+                self.validate_static_in_expr(expr, class_fields)?;
+            }
+            Expr::Call { args, .. } => {
+                for arg in args {
+                    self.validate_static_in_expr(arg, class_fields)?;
+                }
+            }
+            Expr::New { args, .. } => {
+                for arg in args {
+                    self.validate_static_in_expr(arg, class_fields)?;
+                }
+            }
+            _ => {} // Other expressions are fine
+        }
+        Ok(())
+    }
+    
     pub fn report_errors(&mut self, errors: &[DryadError]) {
         for error in errors {
             self.error_reporter.report_error(error);

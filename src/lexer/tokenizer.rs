@@ -190,6 +190,7 @@ impl Lexer {
             "public" => Token::Public,
             "private" => Token::Private,
             "protected" => Token::Protected,
+            "static" => Token::Static,
             "namespace" => Token::Namespace,
             "try" => Token::Try,
             "catch" => Token::Catch,

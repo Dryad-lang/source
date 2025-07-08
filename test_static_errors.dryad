@@ -1,0 +1,40 @@
+// test_static_errors.dryad
+// Test error cases for static methods
+
+class ErrorTestClass {
+    let instanceField;
+    
+    public fun constructor(value) {
+        this.instanceField = value;
+    }
+    
+    // Valid static method
+    public static fun validStatic() {
+        return "This is valid";
+    }
+    
+    // Instance method
+    public fun instanceMethod() {
+        return this.instanceField;
+    }
+}
+
+// Test valid static method call
+let result1 = ErrorTestClass.validStatic();
+print(result1);
+
+// Test valid instance method call
+let obj = new ErrorTestClass(100);
+let result2 = obj.instanceMethod();
+print(result2);
+
+print("Valid calls work correctly!");
+
+// Now test error cases:
+// 1. Try to call static method on instance (should error)
+// let errorResult1 = obj.validStatic();
+
+// 2. Try to call instance method as static (should error)
+// let errorResult2 = ErrorTestClass.instanceMethod();
+
+print("Error tests completed - error cases commented out!");

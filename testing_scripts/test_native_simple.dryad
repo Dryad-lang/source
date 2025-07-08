@@ -1,2 +1,0 @@
-// test_native_simple.dryad
-native_console_println("hello");

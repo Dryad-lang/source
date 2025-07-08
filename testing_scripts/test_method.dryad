@@ -1,7 +1,0 @@
-class TestMethod {
-    public fun sayHello() {
-        print("Hello from method!");
-    }
-}
-
-print("Método definido!");

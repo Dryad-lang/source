@@ -1,0 +1,15 @@
+// test_static_validation.dryad
+// Test static method validation (accessing instance variables)
+
+class InvalidClass {
+    let instanceField;
+    
+    public fun constructor(value) {
+        this.instanceField = value;
+    }
+    
+    // This static method should cause an error because it accesses instance field
+    public static fun badMethod() {
+        return instanceField;
+    }
+}

@@ -1,0 +1,74 @@
+// test_static_method_errors.dryad
+// Tests for static method error cases
+
+import IO.Console;
+
+// Test 1: Static method trying to access 'this' - should cause error
+class InvalidStaticThis {
+    let field;
+    
+    public fun constructor(value) {
+        this.field = value;
+    }
+    
+    // This should cause an error
+    public static fun badMethodThis() {
+        // return this.field;  // Uncomment to test error: static methods cannot access 'this'
+        return "Safe method";
+    }
+}
+
+// Test 2: Static method trying to access instance field - should cause error
+class InvalidStaticField {
+    let instanceField;
+    
+    public fun constructor(value) {
+        this.instanceField = value;
+    }
+    
+    // This should cause an error
+    public static fun badMethodField() {
+        // return instanceField;  // Uncomment to test error: static methods cannot access instance variables
+        return "Safe method";
+    }
+}
+
+// Test 3: Static method trying to set instance field - should cause error
+class InvalidStaticSet {
+    let instanceField;
+    
+    public fun constructor(value) {
+        this.instanceField = value;
+    }
+    
+    // This should cause an error
+    public static fun badMethodSet() {
+        // this.instanceField = 42;  // Uncomment to test error: static methods cannot modify instance fields
+        return "Safe method";
+    }
+}
+
+// Test 4: Trying to call static method on instance - should cause error
+class StaticMethodClass {
+    public static fun staticMethod() {
+        return "I am static";
+    }
+    
+    public fun instanceMethod() {
+        return "I am instance";
+    }
+}
+
+// Valid usage
+Console.println("Valid static call: " + StaticMethodClass.staticMethod());
+
+let instance = new StaticMethodClass();
+Console.println("Valid instance call: " + instance.instanceMethod());
+
+// Invalid usage - should cause error
+// Console.println("Invalid call: " + instance.staticMethod());  // Uncomment to test error
+
+// Test 5: Trying to call instance method as static - should cause error
+// Console.println("Invalid static call: " + StaticMethodClass.instanceMethod());  // Uncomment to test error
+
+Console.println("Error tests completed - uncomment lines to test specific errors!");

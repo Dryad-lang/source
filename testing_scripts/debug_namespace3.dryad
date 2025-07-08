@@ -1,8 +1,0 @@
-// Test verificar chamada de classe
-namespace Test {
-    class Simple {
-    }
-}
-
-let instance = Test.Simple();
-print("Created instance");

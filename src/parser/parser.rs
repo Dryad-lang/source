@@ -53,13 +53,13 @@ impl Parser {
             Token::Export => self.parse_export(),
             Token::Try => self.parse_try(),
             Token::Throw => self.parse_throw(),
-            Token::Public | Token::Private | Token::Protected => {
-                let visibility = self.parse_visibility();
+            Token::Public | Token::Private | Token::Protected | Token::Static => {
+                let (visibility, is_static) = self.parse_visibility_and_static();
                 match &self.current {
-                    Token::Fun => self.parse_function(visibility),
+                    Token::Fun => self.parse_function_with_modifiers(visibility, is_static),
                     Token::Class => self.parse_class_with_visibility(visibility),
                     _ => {
-                        // Se não for fun nem class após visibilidade, avança para próximo token
+                        // Se não for fun nem class após modificadores, avança para próximo token
                         self.advance();
                         None
                     }
@@ -551,6 +551,36 @@ impl Parser {
             _ => Visibility::Public, // default
         }
     }
+    
+    fn parse_visibility_and_static(&mut self) -> (Visibility, bool) {
+        let mut visibility = Visibility::Public;
+        let mut is_static = false;
+        
+        // Pode ter até dois modificadores (visibility + static) em qualquer ordem
+        for _ in 0..2 {
+            match &self.current {
+                Token::Public => {
+                    self.advance();
+                    visibility = Visibility::Public;
+                },
+                Token::Private => {
+                    self.advance();
+                    visibility = Visibility::Private;
+                },
+                Token::Protected => {
+                    self.advance();
+                    visibility = Visibility::Protected;
+                },
+                Token::Static => {
+                    self.advance();
+                    is_static = true;
+                },
+                _ => break,
+            }
+        }
+        
+        (visibility, is_static)
+    }
 
     fn parse_class(&mut self) -> Option<Stmt> {
         self.parse_class_with_visibility(Visibility::Public)
@@ -576,15 +606,15 @@ impl Parser {
         let mut fields = Vec::new();
 
         while !self.check(&Token::RBrace) && !self.check(&Token::Eof) {
-            let member_visibility = if matches!(self.current, Token::Public | Token::Private | Token::Protected) {
-                self.parse_visibility()
+            let (member_visibility, is_static) = if matches!(self.current, Token::Public | Token::Private | Token::Protected | Token::Static) {
+                self.parse_visibility_and_static()
             } else {
-                Visibility::Public
+                (Visibility::Public, false)
             };
 
             match &self.current {
                 Token::Fun => {
-                    if let Some(method) = self.parse_function(member_visibility) {
+                    if let Some(method) = self.parse_function_with_modifiers(member_visibility, is_static) {
                         methods.push(method);
                     }
                 },
@@ -666,6 +696,61 @@ impl Parser {
             params,
             body,
             visibility,
+            is_static: false,
+        })
+    }
+    
+    fn parse_function_with_modifiers(&mut self, visibility: Visibility, is_static: bool) -> Option<Stmt> {
+        self.advance(); // consume 'fun'
+        
+        let name = match &self.current {
+            Token::Identifier(name) => {
+                let func_name = name.clone();
+                self.advance();
+                func_name
+            },
+            _ => return None,
+        };
+
+        if !self.matches(&Token::LParen) {
+            return None;
+        }
+
+        let mut params = Vec::new();
+        
+        if !self.check(&Token::RParen) {
+            loop {
+                match &self.current {
+                    Token::Identifier(param) => {
+                        params.push(param.clone());
+                        self.advance();
+                    },
+                    _ => return None,
+                }
+                
+                if self.matches(&Token::Comma) {
+                    continue;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        if !self.matches(&Token::RParen) {
+            return None;
+        }
+
+        let body = match self.parse_block() {
+            Some(body) => Box::new(body),
+            None => return None,
+        };
+
+        Some(Stmt::FunDecl {
+            name,
+            params,
+            body,
+            visibility,
+            is_static,
         })
     }
 

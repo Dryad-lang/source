@@ -4,17 +4,17 @@
 namespace IO {
     export class Console {
         // Função principal para imprimir com nova linha
-        public fun println(...args) {
+        public static fun println(...args) {
             return native_console_println(args);
         }
 
         // Função para imprimir sem nova linha
-        public fun print(...args) {
+        public static fun print(...args) {
             return native_console_print(args);
         }
 
         // Função para ler entrada do usuário
-        public fun input(prompt) {
+        public static fun input(prompt) {
             if (prompt) {
                 return native_console_input(prompt);
             } else {
@@ -23,26 +23,26 @@ namespace IO {
         }
 
         // Função para ler entrada sem prompt
-        public fun readLine() {
+        public static fun readLine() {
             return native_console_input();
         }
 
         // Aliases comuns
-        public fun log(...args) {
-            return this.println(args);
+        public static fun log(...args) {
+            return Console.println(args);
         }
 
-        public fun write(...args) {
-            return this.print(args);
+        public static fun write(...args) {
+            return Console.print(args);
         }
         
         // Métodos utilitários
-        public fun clear() {
+        public static fun clear() {
             // Clear console (implementação futura)
             return native_console_clear();
         }
         
-        public fun newLine() {
+        public static fun newLine() {
             return native_console_println();
         }
     }

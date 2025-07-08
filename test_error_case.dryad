@@ -1,0 +1,26 @@
+// test_error_case.dryad
+// Test a specific error case
+
+class TestClass {
+    public static fun staticMethod() {
+        return "static";
+    }
+    
+    public fun instanceMethod() {
+        return "instance";
+    }
+}
+
+// Valid calls
+print("Valid static call:");
+let result1 = TestClass.staticMethod();
+print(result1);
+
+let obj = new TestClass();
+print("Valid instance call:");
+let result2 = obj.instanceMethod();
+print(result2);
+
+// Now test error case: calling static method on instance
+print("Trying to call static method on instance (should error):");
+let errorResult = obj.staticMethod();

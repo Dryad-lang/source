@@ -1,7 +1,0 @@
-// Test simples namespace
-namespace Test {
-    class Simple {
-    }
-}
-
-print("OK");

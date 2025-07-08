@@ -1,6 +1,0 @@
-// test_parser_debug.dryad
-// Teste para debugar o problema de parsing de chamadas de função
-
-let x = 5;
-native_console_println("Teste simples");
-native_console_println("x =", x);

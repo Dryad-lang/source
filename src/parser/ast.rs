@@ -87,6 +87,7 @@ pub enum Stmt {
         params: Vec<String>, 
         body: Box<Stmt>,
         visibility: Visibility,
+        is_static: bool,
     },
     ClassDecl {
         name: String,

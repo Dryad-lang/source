@@ -1,8 +1,0 @@
-// Test verificar se classe está definida
-namespace Test {
-    class Simple {
-    }
-}
-
-let x = Test.Simple;
-print("Found class");
