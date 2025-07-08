@@ -592,6 +592,18 @@ impl Evaluator {
                             EvaluationResult::new(Some(Value::Number(a + b))),
                         (Value::String(a), Value::String(b), BinaryOp::Add) => 
                             EvaluationResult::new(Some(Value::String(a + &b))),
+                        // Concatenação string + número
+                        (Value::String(a), Value::Number(b), BinaryOp::Add) => 
+                            EvaluationResult::new(Some(Value::String(a + &b.to_string()))),
+                        // Concatenação número + string
+                        (Value::Number(a), Value::String(b), BinaryOp::Add) => 
+                            EvaluationResult::new(Some(Value::String(a.to_string() + &b))),
+                        // Concatenação string + bool
+                        (Value::String(a), Value::Bool(b), BinaryOp::Add) => 
+                            EvaluationResult::new(Some(Value::String(a + &b.to_string()))),
+                        // Concatenação bool + string
+                        (Value::Bool(a), Value::String(b), BinaryOp::Add) => 
+                            EvaluationResult::new(Some(Value::String(a.to_string() + &b))),
                         (Value::Number(a), Value::Number(b), BinaryOp::Sub) => 
                             EvaluationResult::new(Some(Value::Number(a - b))),
                         (Value::Number(a), Value::Number(b), BinaryOp::Mul) => 

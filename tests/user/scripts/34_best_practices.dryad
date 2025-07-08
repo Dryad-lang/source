@@ -24,7 +24,7 @@ class StringFormatter {
 
 // Uso de método estático
 let result = MathUtils.getConstant();
-print("Static method: 15");
+print("Static method: " + result);
 
 // Uso de método de instância
 let formatter = StringFormatter();

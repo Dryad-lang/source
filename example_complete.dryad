@@ -31,7 +31,7 @@ class MathUtils {
 
 let square = MathUtils.square(5);
 let cube = MathUtils.cube(3);
-print("  - 5² = 25");
-print("  - 3³ = 27");
+print("  - 5² = " + square);
+print("  - 3³ = " + cube);
 
 print("=== Sistema Oak funcionando perfeitamente! ===");

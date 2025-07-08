@@ -1,0 +1,45 @@
+// test_string_concatenation.dryad
+// Teste completo de concatenação de strings
+
+print("=== Teste de Concatenação de Strings ===");
+
+// 1. String + String
+let str1 = "Hello";
+let str2 = "World";
+let result1 = str1 + " " + str2;
+print("String + String: " + result1);
+
+// 2. String + Number
+let name = "João";
+let age = 25;
+let result2 = name + " tem " + age + " anos";
+print("String + Number: " + result2);
+
+// 3. Number + String
+let score = 95;
+let result3 = score + " pontos";
+print("Number + String: " + result3);
+
+// 4. String + Boolean
+let isActive = true;
+let result4 = "Status ativo: " + isActive;
+print("String + Boolean: " + result4);
+
+// 5. Boolean + String
+let result5 = isActive + " é o status";
+print("Boolean + String: " + result5);
+
+// 6. Concatenação múltipla
+let product = "Laptop";
+let price = 2500.99;
+let inStock = true;
+let result6 = "Produto: " + product + ", Preço: R$" + price + ", Em estoque: " + inStock;
+print("Múltipla: " + result6);
+
+// 7. Com operações matemáticas
+let x = 10;
+let y = 5;
+let result7 = "Resultado de " + x + " + " + y + " = " + (x + y);
+print("Com matemática: " + result7);
+
+print("=== Todos os tipos de concatenação funcionando! ===");
