@@ -1,1 +1,2 @@
-print("test");
+// test_minimal.dryad
+native_console_println("Hello, World!");
