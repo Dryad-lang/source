@@ -1,0 +1,21 @@
+// test_try_catch_simple.dryad
+// Teste simples de try-catch
+
+print("=== TRY-CATCH SIMPLES ===");
+
+// Teste básico com função
+fun testFunction() {
+    try {
+        print("Dentro da função");
+        throw "Erro na função";
+        print("Nunca deveria chegar aqui");
+    } catch (e) {
+        print("Erro capturado na função:");
+        print(e);
+    }
+}
+
+print("Chamando função com try-catch:");
+testFunction();
+
+print("=== TESTE CONCLUÍDO ===");

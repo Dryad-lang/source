@@ -1,0 +1,62 @@
+// test_final_validation.dryad
+// Teste final do sistema using/export
+
+// Teste 1: Exportação básica
+export fun globalAdd(a, b) {
+    return a + b;
+}
+
+export class GlobalCalculator {
+    fun multiply(a, b) {
+        return a * b;
+    }
+}
+
+// Teste 2: Namespace com exports
+namespace Math.Advanced {
+    export fun power(base, exp) {
+        let result = 1;
+        let i = 0;
+        while (i < exp) {
+            result = result * base;
+            i = i + 1;
+        }
+        return result;
+    }
+    
+    export class AdvancedCalculator {
+        fun fibonacci(n) {
+            if (n <= 1) return n;
+            return n; // Simplified
+        }
+    }
+}
+
+// Teste 3: Using com diferentes formas
+use Math.Advanced as MA;
+
+print("=== Teste 1: Exports globais ===");
+let sum = globalAdd(15, 25);
+print("15 + 25 =");
+print(sum);
+
+let globalCalc = GlobalCalculator();
+let product = globalCalc.multiply(6, 9);
+print("6 * 9 =");
+print(product);
+
+print("=== Teste 2: Namespace com alias ===");
+let powerResult = MA.power(2, 3);
+print("2^3 =");
+print(powerResult);
+
+let advancedCalc = MA.AdvancedCalculator();
+let fibResult = advancedCalc.fibonacci(5);
+print("fibonacci(5) =");
+print(fibResult);
+
+print("=== Teste 3: Importação externa ===");
+use simple_math;
+let externalSum = simple_math.add(100, 200);
+print("100 + 200 =");
+print(externalSum);

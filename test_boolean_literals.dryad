@@ -1,0 +1,18 @@
+// test_boolean_literals.dryad
+// Teste dos literais boolean
+
+native_console_println("Testando literais boolean");
+
+let verdadeiro = true;
+let falso = false;
+let nulo = null;
+
+native_console_println("verdadeiro:", verdadeiro);
+native_console_println("falso:", falso);
+native_console_println("nulo:", nulo);
+
+native_console_println("typeof(true):", native_core_typeof(verdadeiro));
+native_console_println("typeof(false):", native_core_typeof(falso));
+native_console_println("typeof(null):", native_core_typeof(nulo));
+
+native_console_println("Teste concluído");

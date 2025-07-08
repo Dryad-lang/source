@@ -1,0 +1,38 @@
+// test_native_files.dryad
+// Teste das funções nativas de arquivo
+
+native_console_println("=== Teste de Funções de Arquivo ===");
+
+let filename = "test_temp.txt";
+let content = "Conteúdo de teste do arquivo";
+
+native_console_println("1. Testando escrita de arquivo");
+let writeResult = native_fs_write_file(filename, content);
+native_console_println("Resultado da escrita:", writeResult);
+
+native_console_println("2. Testando verificação de existência");
+let exists = native_fs_file_exists(filename);
+native_console_println("Arquivo existe:", exists);
+
+native_console_println("3. Testando leitura de arquivo");
+let readContent = native_fs_read_file(filename);
+native_console_println("Conteúdo lido:", readContent);
+
+native_console_println("4. Testando append de arquivo");
+let appendContent = "\nLinha adicional";
+let appendResult = native_fs_append_file(filename, appendContent);
+native_console_println("Resultado do append:", appendResult);
+
+native_console_println("5. Lendo arquivo após append");
+let newContent = native_fs_read_file(filename);
+native_console_println("Novo conteúdo:", newContent);
+
+native_console_println("6. Testando deleção de arquivo");
+let deleteResult = native_fs_delete_file(filename);
+native_console_println("Resultado da deleção:", deleteResult);
+
+native_console_println("7. Verificando se arquivo foi deletado");
+let existsAfterDelete = native_fs_file_exists(filename);
+native_console_println("Arquivo existe após deleção:", existsAfterDelete);
+
+native_console_println("=== Teste de Arquivo Finalizado ===");

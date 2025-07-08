@@ -1,0 +1,2 @@
+// test_simple_debug.dryad
+print("hello");

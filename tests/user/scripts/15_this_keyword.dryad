@@ -1,0 +1,16 @@
+// EXPECTED: Hello Ana
+// Teste: Uso do 'this' em métodos
+class Person {
+    public name;
+    
+    public fun init(name) {
+        this.name = name;
+    }
+    
+    public fun greet() {
+        print("Hello " + this.name);
+    }
+}
+
+let p = new Person("Ana");
+p.greet();

@@ -1,0 +1,8 @@
+// tests/user/scripts/18_using_basic.dryad
+// EXPECTED: 3.14159
+// Teste: Using básico sem alias
+
+use Math;
+
+let pi_value = Math.PI();
+print(pi_value);

@@ -1,0 +1,14 @@
+// Teste de using com alias
+namespace Mathematics.Constants {
+    class PI {
+        fun value() {
+            return 3.14159;
+        }
+    }
+}
+
+use Mathematics.Constants as MC;
+
+let pi_instance = MC.PI();
+let pi_value = pi_instance.value();
+print(pi_value);

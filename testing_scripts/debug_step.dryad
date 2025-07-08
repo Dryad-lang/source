@@ -1,0 +1,18 @@
+// Debug step by step
+print("Step 1: Before namespace declaration");
+
+namespace Math.Utils {
+    class Vector {
+        fun name() {
+            return "Vector2D";
+        }
+    }
+}
+
+print("Step 2: After namespace declaration");
+let vec = Math.Utils.Vector();
+print("Step 3: After object creation");
+let name = vec.name();
+print("Step 4: After method call");
+print(name);
+print("Step 5: Done");

@@ -1,0 +1,17 @@
+// tests/user/scripts/22_export_class.dryad
+// EXPECTED: Calculator
+// Teste: Export de classe
+
+export class Calculator {
+    fun add(a, b) {
+        return a + b;
+    }
+    
+    fun getName() {
+        return "Calculator";
+    }
+}
+
+let calc = Calculator();
+let name = calc.getName();
+print(name);

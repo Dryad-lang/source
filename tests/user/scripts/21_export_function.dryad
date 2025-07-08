@@ -1,0 +1,10 @@
+// tests/user/scripts/21_export_function.dryad
+// EXPECTED: 10
+// Teste: Export de função
+
+export fun multiply(a, b) {
+    return a * b;
+}
+
+let result = multiply(2, 5);
+print(result);

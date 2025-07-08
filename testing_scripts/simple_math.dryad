@@ -1,0 +1,20 @@
+// simple_math.dryad
+// Módulo simples para teste de importação
+
+export fun add(a, b) {
+    return a + b;
+}
+
+export fun multiply(a, b) {
+    return a * b;
+}
+
+export class Calculator {
+    fun add(a, b) {
+        return a + b;
+    }
+    
+    fun multiply(a, b) {
+        return a * b;
+    }
+}

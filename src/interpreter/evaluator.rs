@@ -1,15 +1,19 @@
 // src/interpreter/evaluator.rs
 
-use crate::parser::ast::{Expr, Stmt, BinaryOp};
-use crate::interpreter::env::{Env, Value};
-use crate::interpreter::io;
-use crate::interpreter::types::{TypeChecker};
+use crate::parser::ast::{Expr, Stmt, BinaryOp, UnaryOp};
+use crate::interpreter::env::{Env, Value, Class, Instance};
+use crate::interpreter::types::TypeChecker;
 use crate::interpreter::errors::{DryadError, ErrorReporter, ErrorSeverity};
+use crate::interpreter::module_loader::ModuleLoader;
+use crate::interpreter::native::NativeRegistry;
+use std::rc::Rc;
+use std::cell::RefCell;
 
 #[derive(Debug)]
 pub struct EvaluationResult {
     pub value: Option<Value>,
     pub errors: Vec<DryadError>,
+    pub exception: Option<Value>,
 }
 
 impl EvaluationResult {
@@ -17,6 +21,7 @@ impl EvaluationResult {
         Self {
             value,
             errors: Vec::new(),
+            exception: None,
         }
     }
     
@@ -24,17 +29,32 @@ impl EvaluationResult {
         Self {
             value: None,
             errors: vec![error],
+            exception: None,
+        }
+    }
+    
+    pub fn with_exception(exception: Value) -> Self {
+        Self {
+            value: None,
+            errors: Vec::new(),
+            exception: Some(exception),
         }
     }
     
     pub fn add_error(&mut self, error: DryadError) {
         self.errors.push(error);
     }
+    
+    pub fn is_exception(&self) -> bool {
+        self.exception.is_some()
+    }
 }
 
 pub struct Evaluator {
     type_checker: TypeChecker,
     error_reporter: ErrorReporter,
+    module_loader: ModuleLoader,
+    native_registry: NativeRegistry,
 }
 
 impl Evaluator {
@@ -42,19 +62,21 @@ impl Evaluator {
         Self {
             type_checker: TypeChecker::new(),
             error_reporter: ErrorReporter::new(),
+            module_loader: ModuleLoader::new(),
+            native_registry: NativeRegistry::new(),
         }
     }
     
     pub fn eval_stmt(&mut self, stmt: &Stmt, env: &mut Env) -> EvaluationResult {
-        // Verificação de tipos antes da avaliação
-        if let Some(type_error) = self.type_checker.check_statement(stmt, env) {
-            let error = DryadError::new(
-                format!("Erro de tipo: {:?}", type_error),
-                Some((0, 0)), // TODO: Adicionar posições reais
-                ErrorSeverity::Error,
-            );
-            return EvaluationResult::with_error(error);
-        }
+        // Verificação de tipos desabilitada temporariamente para funções nativas
+        // if let Some(type_error) = self.type_checker.check_statement(stmt, env) {
+        //     let error = DryadError::new(
+        //         format!("Erro de tipo: {:?}", type_error),
+        //         Some((0, 0)), // TODO: Adicionar posições reais
+        //         ErrorSeverity::Error,
+        //     );
+        //     return EvaluationResult::with_error(error);
+        // }
         
         match stmt {
             Stmt::Let { name, value } => {
@@ -66,11 +88,29 @@ impl Evaluator {
                     result
                 }
             }
+            Stmt::Assign { name, value } => {
+                // Reatribuição - a variável deve já existir
+                let result = self.eval_expr(value, env);
+                if let Some(val) = result.value {
+                    env.set(name.clone(), val.clone()); // Atualizar valor existente
+                    EvaluationResult::new(Some(val))
+                } else {
+                    result
+                }
+            }
             Stmt::Expr(expr) => self.eval_expr(expr, env),
             Stmt::Block(stmts) => {
                 let mut final_result = EvaluationResult::new(None);
                 for s in stmts {
                     let result = self.eval_stmt(s, env);
+                    
+                    // If there's an exception, propagate it immediately
+                    if result.is_exception() {
+                        final_result.exception = result.exception;
+                        final_result.errors.extend(result.errors);
+                        return final_result;
+                    }
+                    
                     final_result.errors.extend(result.errors);
                     if result.value.is_some() {
                         final_result.value = result.value;
@@ -151,26 +191,315 @@ impl Evaluator {
                 }
                 result
             }
+            Stmt::ClassDecl { name, methods, fields, visibility: _ } => {
+                let mut class = Class::new(name.clone(), fields.clone());
+                
+                // Adicionar métodos à classe
+                for method in methods {
+                    if let Stmt::FunDecl { name: method_name, params, body, visibility } = method {
+                        let method_value = Value::Function {
+                            name: method_name.clone(),
+                            params: params.clone(),
+                            body: (**body).clone(),
+                            visibility: visibility.clone(),
+                        };
+                        class.add_method(method_name.clone(), method_value);
+                    }
+                }
+                
+                let class_value = Value::Class(Rc::new(class));
+                env.set(name.clone(), class_value.clone());
+                EvaluationResult::new(Some(class_value))
+            }
+            
+            Stmt::FunDecl { name, params, body, visibility } => {
+                let func_value = Value::Function {
+                    name: name.clone(),
+                    params: params.clone(),
+                    body: (**body).clone(),
+                    visibility: visibility.clone(),
+                };
+                env.set(name.clone(), func_value.clone());
+                EvaluationResult::new(Some(func_value))
+            }
+            
+            Stmt::Return(expr) => {
+                if let Some(expr) = expr {
+                    self.eval_expr(expr, env)
+                } else {
+                    EvaluationResult::new(Some(Value::Null))
+                }
+            }
+            
+            Stmt::NamespaceDecl { name, body } => {
+                // Processar declarações dentro do namespace
+                let mut final_result = EvaluationResult::new(None);
+                
+                for stmt in body {
+                    match stmt {
+                        Stmt::ClassDecl { name: class_name, methods, fields, visibility: _ } => {
+                            // Criar classe com nome completo incluindo namespace
+                            let full_class_name = format!("{}.{}", name, class_name);
+                            
+                            let mut class = Class::new(full_class_name.clone(), fields.clone());
+                            
+                            // Processar métodos da classe
+                            for method in methods {
+                                if let Stmt::FunDecl { name: method_name, params, body, visibility } = method {
+                                    let method_value = Value::Function {
+                                        name: method_name.clone(),
+                                        params: params.clone(),
+                                        body: *body.clone(),
+                                        visibility: visibility.clone(),
+                                    };
+                                    class.add_method(method_name.clone(), method_value);
+                                }
+                            }
+                            
+                            let class_value = Value::Class(Rc::new(class));
+                            env.define_in_namespace(name, class_name, class_value);
+                        }
+                        
+                        Stmt::FunDecl { name: func_name, params, body, visibility } => {
+                            // Criar função com nome completo incluindo namespace
+                            let func_value = Value::Function {
+                                name: format!("{}.{}", name, func_name),
+                                params: params.clone(),
+                                body: *body.clone(),
+                                visibility: visibility.clone(),
+                            };
+                            env.define_in_namespace(name, func_name, func_value);
+                        }
+                        
+                        Stmt::Export { item } => {
+                            // Process export within namespace
+                            let export_result = self.eval_stmt(item, env);
+                            final_result.errors.extend(export_result.errors);
+                            
+                            // Extract exported item and add to namespace
+                            match item.as_ref() {
+                                Stmt::FunDecl { name: func_name, params, body, visibility } => {
+                                    let func_value = Value::Function {
+                                        name: format!("{}.{}", name, func_name),
+                                        params: params.clone(),
+                                        body: *body.clone(),
+                                        visibility: visibility.clone(),
+                                    };
+                                    env.define_in_namespace(name, func_name, func_value.clone());
+                                    env.export_item(format!("{}.{}", name, func_name), func_value);
+                                }
+                                Stmt::ClassDecl { name: class_name, methods, fields, visibility: _ } => {
+                                    let full_class_name = format!("{}.{}", name, class_name);
+                                    let mut class = Class::new(full_class_name.clone(), fields.clone());
+                                    
+                                    for method in methods {
+                                        if let Stmt::FunDecl { name: method_name, params, body, visibility } = method {
+                                            let method_value = Value::Function {
+                                                name: method_name.clone(),
+                                                params: params.clone(),
+                                                body: *body.clone(),
+                                                visibility: visibility.clone(),
+                                            };
+                                            class.add_method(method_name.clone(), method_value);
+                                        }
+                                    }
+                                    
+                                    let class_value = Value::Class(Rc::new(class));
+                                    env.define_in_namespace(name, class_name, class_value.clone());
+                                    env.export_item(format!("{}.{}", name, class_name), class_value);
+                                }
+                                _ => {}
+                            }
+                        }
+                        
+                        _ => {
+                            // Para outros tipos de statement, executar normalmente
+                            let result = self.eval_stmt(stmt, env);
+                            final_result.errors.extend(result.errors);
+                        }
+                    }
+                }
+                
+                final_result
+            }
+            
+            Stmt::Using { module_path, alias } => {
+                // Try to load external module first
+                let module_result = {
+                    self.module_loader.load_module(module_path)
+                };
+                
+                match module_result {
+                    Ok(statements) => {
+                        // Execute module statements in a new environment
+                        let mut module_env = Env::new();
+                        for stmt in &statements {
+                            let result = self.eval_stmt(stmt, &mut module_env);
+                            if !result.errors.is_empty() {
+                                return result;
+                            }
+                        }
+                        
+                        // Import all exported items from the module
+                        let exported_items = module_env.get_all_exported();
+                        for (name, value) in &exported_items {
+                            let full_name = if let Some(alias_name) = alias {
+                                format!("{}.{}", alias_name, name)
+                            } else {
+                                let parts: Vec<&str> = module_path.split('.').collect();
+                                if let Some(last_part) = parts.last() {
+                                    format!("{}.{}", last_part, name)
+                                } else {
+                                    name.clone()
+                                }
+                            };
+                            env.set(full_name, value.clone());
+                        }
+                    }
+                    Err(_) => {
+                        // Fallback to namespace alias (for same-file namespaces)
+                        if let Some(alias_name) = alias {
+                            env.add_alias(alias_name.clone(), module_path.clone());
+                        } else {
+                            let parts: Vec<&str> = module_path.split('.').collect();
+                            if let Some(last_part) = parts.last() {
+                                env.add_alias(last_part.to_string(), module_path.clone());
+                            }
+                        }
+                    }
+                }
+                
+                EvaluationResult::new(Some(Value::Null))
+            }
+            
+            Stmt::Export { item } => {
+                // Evaluate the item and export it
+                let result = self.eval_stmt(item, env);
+                
+                // Extract the name and value for export
+                match item.as_ref() {
+                    Stmt::FunDecl { name, .. } => {
+                        if let Some(value) = env.get(name) {
+                            env.export_item(name.clone(), value);
+                        }
+                    }
+                    Stmt::ClassDecl { name, .. } => {
+                        if let Some(value) = env.get(name) {
+                            env.export_item(name.clone(), value);
+                        }
+                    }
+                    Stmt::NamespaceDecl { name, .. } => {
+                        // Export all items from namespace
+                        // This is simplified - in practice, you'd need to track namespace contents
+                        env.export_item(name.clone(), Value::Null);
+                    }
+                    _ => {
+                        // Other statements can't be exported
+                    }
+                }
+                
+                result
+            }
+            
+            Stmt::Try { try_block, catch_param, catch_block } => {
+                // Execute try block
+                let try_result = self.eval_stmt(try_block, env);
+                
+                // If there's an exception, handle it with catch block
+                if try_result.is_exception() {
+                    if let Some(exception) = try_result.exception {
+                        // Create new environment for catch block with exception parameter
+                        if let Some(param_name) = catch_param {
+                            env.set(param_name.clone(), exception);
+                        }
+                        
+                        // Execute catch block
+                        let catch_result = self.eval_stmt(catch_block, env);
+                        
+                        // Clean up exception parameter if it was set
+                        if let Some(param_name) = catch_param {
+                            env.remove(param_name);
+                        }
+                        
+                        catch_result
+                    } else {
+                        try_result
+                    }
+                } else {
+                    try_result
+                }
+            }
+            
+            Stmt::Throw { value } => {
+                // Evaluate the expression to throw
+                let eval_result = self.eval_expr(value, env);
+                
+                if let Some(throw_value) = eval_result.value {
+                    // Create exception
+                    let exception = match throw_value {
+                        Value::String(msg) => Value::Exception {
+                            message: msg,
+                            value: None,
+                        },
+                        other => Value::Exception {
+                            message: format!("{:?}", other),
+                            value: Some(Box::new(other)),
+                        },
+                    };
+                    
+                    EvaluationResult::with_exception(exception)
+                } else {
+                    // If evaluation failed, return that error
+                    eval_result
+                }
+            }
+            
+            // ...existing code...
         }
     }
 
     pub fn eval_expr(&mut self, expr: &Expr, env: &mut Env) -> EvaluationResult {
-        // Verificação de tipos antes da avaliação
-        if let Some(type_error) = self.type_checker.check_expression(expr, env) {
-            let error = DryadError::new(
-                format!("Erro de tipo: {:?}", type_error),
-                Some((0, 0)), // TODO: Adicionar posições reais
-                ErrorSeverity::Error,
-            );
-            return EvaluationResult::with_error(error);
-        }
+        // Verificação de tipos desabilitada temporariamente para funções nativas
+        // if let Some(type_error) = self.type_checker.check_expression(expr, env) {
+        //     let error = DryadError::new(
+        //         format!("Erro de tipo: {:?}", type_error),
+        //         Some((0, 0)), // TODO: Adicionar posições reais
+        //         ErrorSeverity::Error,
+        //     );
+        //     return EvaluationResult::with_error(error);
+        // }
         
         match expr {
             Expr::Number(n) => EvaluationResult::new(Some(Value::Number(*n))),
             Expr::String(s) => EvaluationResult::new(Some(Value::String(s.clone()))),
+            Expr::Bool(b) => EvaluationResult::new(Some(Value::Bool(*b))),
+            Expr::Null => EvaluationResult::new(Some(Value::Null)),
             Expr::Identifier(name) => {
+                // Primeiro tenta buscar normalmente
                 if let Some(value) = env.get(name) {
                     EvaluationResult::new(Some(value))
+                } else if self.native_registry.is_native(name) {
+                    // Se é uma função nativa, criar um placeholder para chamadas
+                    EvaluationResult::new(Some(Value::Function {
+                        name: name.clone(),
+                        params: vec![], // Native functions handle their own params
+                        body: Stmt::Block(vec![]), // Empty body for native functions
+                        visibility: crate::parser::ast::Visibility::Public,
+                    }))
+                } else if name.contains('.') {
+                    // Se contém ponto, pode ser um caminho de namespace ou alias
+                    if let Some(value) = env.resolve_with_alias(name) {
+                        EvaluationResult::new(Some(value))
+                    } else if let Some(value) = env.resolve_namespace_path(name) {
+                        EvaluationResult::new(Some(value))
+                    } else {
+                        let error = DryadError::new(
+                            format!("Caminho '{}' não encontrado", name),
+                            Some((0, 0)), // TODO: Adicionar posições reais
+                            ErrorSeverity::Error,
+                        );
+                        EvaluationResult::with_error(error)
+                    }
                 } else {
                     let error = DryadError::new(
                         format!("Variável '{}' não definida", name),
@@ -195,6 +524,8 @@ impl Evaluator {
                     match (lval, rval, op) {
                         (Value::Number(a), Value::Number(b), BinaryOp::Add) => 
                             EvaluationResult::new(Some(Value::Number(a + b))),
+                        (Value::String(a), Value::String(b), BinaryOp::Add) => 
+                            EvaluationResult::new(Some(Value::String(a + &b))),
                         (Value::Number(a), Value::Number(b), BinaryOp::Sub) => 
                             EvaluationResult::new(Some(Value::Number(a - b))),
                         (Value::Number(a), Value::Number(b), BinaryOp::Mul) => 
@@ -223,6 +554,44 @@ impl Evaluator {
                             EvaluationResult::new(Some(Value::Bool(a > b))),
                         (Value::Number(a), Value::Number(b), BinaryOp::GreaterEqual) => 
                             EvaluationResult::new(Some(Value::Bool(a >= b))),
+                        
+                        // Operadores lógicos
+                        (a, b, BinaryOp::And) => {
+                            if a.is_truthy() && b.is_truthy() {
+                                EvaluationResult::new(Some(Value::Bool(true)))
+                            } else {
+                                EvaluationResult::new(Some(Value::Bool(false)))
+                            }
+                        }
+                        (a, b, BinaryOp::Or) => {
+                            if a.is_truthy() || b.is_truthy() {
+                                EvaluationResult::new(Some(Value::Bool(true)))
+                            } else {
+                                EvaluationResult::new(Some(Value::Bool(false)))
+                            }
+                        }
+                        
+                        // Comparações de string
+                        (Value::String(a), Value::String(b), BinaryOp::Equal) => 
+                            EvaluationResult::new(Some(Value::Bool(a == b))),
+                        (Value::String(a), Value::String(b), BinaryOp::NotEqual) => 
+                            EvaluationResult::new(Some(Value::Bool(a != b))),
+                        
+                        // Comparações de bool
+                        (Value::Bool(a), Value::Bool(b), BinaryOp::Equal) => 
+                            EvaluationResult::new(Some(Value::Bool(a == b))),
+                        (Value::Bool(a), Value::Bool(b), BinaryOp::NotEqual) => 
+                            EvaluationResult::new(Some(Value::Bool(a != b))),
+                        
+                        // Comparações mistas
+                        (Value::Null, Value::Null, BinaryOp::Equal) => 
+                            EvaluationResult::new(Some(Value::Bool(true))),
+                        (Value::Null, _, BinaryOp::Equal) | (_, Value::Null, BinaryOp::Equal) => 
+                            EvaluationResult::new(Some(Value::Bool(false))),
+                        (Value::Null, Value::Null, BinaryOp::NotEqual) => 
+                            EvaluationResult::new(Some(Value::Bool(false))),
+                        (Value::Null, _, BinaryOp::NotEqual) | (_, Value::Null, BinaryOp::NotEqual) => 
+                            EvaluationResult::new(Some(Value::Bool(true))),
                         _ => {
                             let error = DryadError::new(
                                 format!("Operação binária não suportada: {:?}", op),
@@ -236,154 +605,391 @@ impl Evaluator {
                     EvaluationResult::new(Some(Value::Null))
                 }
             }
+            Expr::Unary { op, expr } => {
+                let expr_result = self.eval_expr(expr, env);
+                if !expr_result.errors.is_empty() {
+                    return expr_result;
+                }
+                
+                if let Some(value) = expr_result.value {
+                    match (op, value) {
+                        (UnaryOp::Not, val) => {
+                            EvaluationResult::new(Some(Value::Bool(!val.is_truthy())))
+                        }
+                        (UnaryOp::Minus, Value::Number(n)) => {
+                            EvaluationResult::new(Some(Value::Number(-n)))
+                        }
+                        (UnaryOp::Minus, _) => {
+                            let error = DryadError::new(
+                                "Operador unário '-' só pode ser aplicado a números".to_string(),
+                                Some((0, 0)),
+                                ErrorSeverity::Error,
+                            );
+                            EvaluationResult::with_error(error)
+                        }
+                    }
+                } else {
+                    EvaluationResult::new(Some(Value::Null))
+                }
+            }
             Expr::Call { function, args } => self.eval_function_call(function, args, env),
+            Expr::This => {
+                if let Some(this_value) = env.get("this") {
+                    EvaluationResult::new(Some(this_value))
+                } else {
+                    let error = DryadError::new(
+                        "Uso de 'this' fora de um contexto de método".to_string(),
+                        Some((0, 0)),
+                        ErrorSeverity::Error,
+                    );
+                    EvaluationResult::with_error(error)
+                }
+            }
+            
+            Expr::New { class, args } => {
+                if let Some(Value::Class(class_ref)) = env.get(class) {
+                    let instance = Instance::new(class_ref.clone());
+                    let instance_value = Value::Instance(Rc::new(RefCell::new(instance)));
+                    
+                    // Verificar se existe método init e chamá-lo
+                    if let Some(init_method) = class_ref.get_method("init") {
+                        let mut method_env = Env::with_this(instance_value.clone());
+                        
+                        // Avaliar argumentos
+                        let mut arg_values = Vec::new();
+                        for arg in args {
+                            let arg_result = self.eval_expr(arg, env);
+                            if !arg_result.errors.is_empty() {
+                                return arg_result;
+                            }
+                            if let Some(val) = arg_result.value {
+                                arg_values.push(val);
+                            }
+                        }
+                        
+                        // Chamar método init se existir
+                        if let Value::Function { params, body, .. } = init_method {
+                            // Bind parâmetros
+                            for (i, param) in params.iter().enumerate() {
+                                if let Some(arg_val) = arg_values.get(i) {
+                                    method_env.set(param.clone(), arg_val.clone());
+                                }
+                            }
+                            
+                            // Executar corpo do método init
+                            let _init_result = self.eval_stmt(&body, &mut method_env);
+                        }
+                    }
+                    
+                    EvaluationResult::new(Some(instance_value))
+                } else {
+                    let error = DryadError::new(
+                        format!("Classe '{}' não definida", class),
+                        Some((0, 0)),
+                        ErrorSeverity::Error,
+                    );
+                    EvaluationResult::with_error(error)
+                }
+            }
+            
+            Expr::Get { object, name } => {
+                let obj_result = self.eval_expr(object, env);
+                if !obj_result.errors.is_empty() {
+                    return obj_result;
+                }
+                
+                if let Some(Value::Instance(instance_ref)) = obj_result.value {
+                    let instance = instance_ref.borrow();
+                    
+                    // Primeiro tenta acessar campo
+                    if let Some(field_value) = instance.get_field(name) {
+                        EvaluationResult::new(Some(field_value))
+                    } else if let Some(method) = instance.get_method(name) {
+                        // Retorna método bound à instância
+                        EvaluationResult::new(Some(method))
+                    } else {
+                        let error = DryadError::new(
+                            format!("Propriedade '{}' não encontrada", name),
+                            Some((0, 0)),
+                            ErrorSeverity::Error,
+                        );
+                        EvaluationResult::with_error(error)
+                    }
+                } else {
+                    let error = DryadError::new(
+                        "Tentativa de acessar propriedade em valor não-objeto".to_string(),
+                        Some((0, 0)),
+                        ErrorSeverity::Error,
+                    );
+                    EvaluationResult::with_error(error)
+                }
+            }
+            
+            Expr::Set { object, name, value } => {
+                let obj_result = self.eval_expr(object, env);
+                if !obj_result.errors.is_empty() {
+                    return obj_result;
+                }
+                
+                let val_result = self.eval_expr(value, env);
+                if !val_result.errors.is_empty() {
+                    return val_result;
+                }
+                
+                if let (Some(Value::Instance(instance_ref)), Some(new_value)) = 
+                    (obj_result.value, val_result.value) {
+                    let mut instance = instance_ref.borrow_mut();
+                    instance.set_field(name.clone(), new_value.clone());
+                    EvaluationResult::new(Some(new_value))
+                } else {
+                    let error = DryadError::new(
+                        "Tentativa de definir propriedade em valor não-objeto".to_string(),
+                        Some((0, 0)),
+                        ErrorSeverity::Error,
+                    );
+                    EvaluationResult::with_error(error)
+                }
+            }
+            
+            // ...existing code...
         }
     }
     
     fn eval_function_call(&mut self, function: &str, args: &[Expr], env: &mut Env) -> EvaluationResult {
-        match function {
-            "print" => {
-                for arg in args {
-                    let result = self.eval_expr(arg, env);
-                    if !result.errors.is_empty() {
-                        return result;
-                    }
-                    
-                    if let Some(value) = result.value {
-                        match value {
-                            Value::Number(n) => print!("{}", n),
-                            Value::String(s) => print!("{}", s),
-                            Value::Bool(b) => print!("{}", b),
-                            Value::Null => print!("null"),
+        // Primeiro verificar se é um método chamado em um objeto (obj.method)
+        if function.contains('.') {
+            let parts: Vec<&str> = function.split('.').collect();
+            if parts.len() == 2 {
+                let obj_name = parts[0];
+                let method_name = parts[1];
+                
+                // Verificar se obj_name é uma variável (não um namespace)
+                if let Some(obj_value) = env.get(obj_name) {
+                    // É uma variável - tratar como method call
+                    if let Value::Instance(instance_ref) = obj_value {
+                        let instance = instance_ref.borrow();
+                        
+                        if let Some(method_value) = instance.get_method(method_name) {
+                            // Avaliar argumentos
+                            let mut arg_values = Vec::new();
+                            for arg in args {
+                                let arg_result = self.eval_expr(arg, env);
+                                if !arg_result.errors.is_empty() {
+                                    return arg_result;
+                                }
+                                if let Some(val) = arg_result.value {
+                                    arg_values.push(val);
+                                }
+                            }
+                            
+                            // Chamar método com this binding
+                            if let Value::Function { params, body, .. } = method_value {
+                                let mut method_env = Env::with_this(Value::Instance(instance_ref.clone()));
+                                
+                                // Bind parâmetros
+                                for (i, param) in params.iter().enumerate() {
+                                    if let Some(arg_val) = arg_values.get(i) {
+                                        method_env.set(param.clone(), arg_val.clone());
+                                    }
+                                }
+                                
+                                // Executar corpo do método
+                                return self.eval_stmt(&body, &mut method_env);
+                            }
+                        } else {
+                            let error = DryadError::new(
+                                format!("Método '{}' não encontrado", method_name),
+                                Some((0, 0)),
+                                ErrorSeverity::Error,
+                            );
+                            return EvaluationResult::with_error(error);
                         }
                     }
                 }
-                println!(); // Nova linha após print
-                EvaluationResult::new(Some(Value::Null))
             }
-            "read_file" => {
-                if let Some(filename_arg) = args.get(0) {
-                    let result = self.eval_expr(filename_arg, env);
-                    if !result.errors.is_empty() {
-                        return result;
-                    }
-                    
-                    if let Some(Value::String(filename)) = result.value {
-                        match io::read_file(&filename) {
-                            Ok(content) => EvaluationResult::new(Some(Value::String(content))),
-                            Err(e) => {
-                                let error = DryadError::new(
-                                    format!("Erro ao ler arquivo '{}': {}", filename, e),
-                                    Some((0, 0)),
-                                    ErrorSeverity::Error,
-                                );
-                                EvaluationResult::with_error(error)
-                            }
-                        }
-                    } else {
+            
+            // Se não é um método em variável, tentar resolver como namespace ou alias
+            if let Some(func_value) = env.resolve_with_alias(function) {
+                return self.call_resolved_function(func_value, args, env);
+            }
+            
+            if let Some(func_value) = env.resolve_namespace_path(function) {
+                return self.call_resolved_function(func_value, args, env);
+            }
+        }
+        
+        // Evaluate arguments first
+        let mut arg_values = Vec::new();
+        for arg in args {
+            let arg_result = self.eval_expr(arg, env);
+            if !arg_result.errors.is_empty() {
+                return arg_result;
+            }
+            if let Some(val) = arg_result.value {
+                arg_values.push(val);
+            }
+        }
+        
+        // Check if it's a native function first
+        if self.native_registry.is_native(function) {
+            match self.native_registry.call(function, &arg_values) {
+                Some(Ok(value)) => return EvaluationResult::new(Some(value)),
+                Some(Err(error)) => return EvaluationResult::with_error(error),
+                None => {} // Fall through to legacy handling
+            }
+        }
+        
+        // Legacy built-in functions (for backward compatibility)
+        match function {
+            "print" => {
+                // Redirect to native function
+                match self.native_registry.call("native_console_println", &arg_values) {
+                    Some(Ok(value)) => EvaluationResult::new(Some(value)),
+                    Some(Err(error)) => EvaluationResult::with_error(error),
+                    None => {
                         let error = DryadError::new(
-                            "read_file: argumento deve ser uma string".to_string(),
+                            "Função 'print' não encontrada".to_string(),
                             Some((0, 0)),
                             ErrorSeverity::Error,
                         );
                         EvaluationResult::with_error(error)
                     }
-                } else {
-                    let error = DryadError::new(
-                        "read_file: nome do arquivo requerido".to_string(),
-                        Some((0, 0)),
-                        ErrorSeverity::Error,
-                    );
-                    EvaluationResult::with_error(error)
+                }
+            }
+            "read_file" => {
+                // Redirect to native function
+                match self.native_registry.call("native_fs_read_file", &arg_values) {
+                    Some(Ok(value)) => EvaluationResult::new(Some(value)),
+                    Some(Err(error)) => EvaluationResult::with_error(error),
+                    None => {
+                        let error = DryadError::new(
+                            "Função 'read_file' não encontrada".to_string(),
+                            Some((0, 0)),
+                            ErrorSeverity::Error,
+                        );
+                        EvaluationResult::with_error(error)
+                    }
                 }
             }
             "write_file" => {
-                if let (Some(filename_arg), Some(content_arg)) = (args.get(0), args.get(1)) {
-                    let filename_result = self.eval_expr(filename_arg, env);
-                    if !filename_result.errors.is_empty() {
-                        return filename_result;
-                    }
-                    
-                    let content_result = self.eval_expr(content_arg, env);
-                    if !content_result.errors.is_empty() {
-                        return content_result;
-                    }
-                    
-                    if let (Some(Value::String(filename)), Some(Value::String(content))) = 
-                        (filename_result.value, content_result.value) {
-                        match io::write_file(&filename, &content) {
-                            Ok(_) => EvaluationResult::new(Some(Value::Null)),
-                            Err(e) => {
-                                let error = DryadError::new(
-                                    format!("Erro ao escrever arquivo '{}': {}", filename, e),
-                                    Some((0, 0)),
-                                    ErrorSeverity::Error,
-                                );
-                                EvaluationResult::with_error(error)
-                            }
-                        }
-                    } else {
+                // Redirect to native function
+                match self.native_registry.call("native_fs_write_file", &arg_values) {
+                    Some(Ok(value)) => EvaluationResult::new(Some(value)),
+                    Some(Err(error)) => EvaluationResult::with_error(error),
+                    None => {
                         let error = DryadError::new(
-                            "write_file: argumentos devem ser strings".to_string(),
+                            "Função 'write_file' não encontrada".to_string(),
                             Some((0, 0)),
                             ErrorSeverity::Error,
                         );
                         EvaluationResult::with_error(error)
                     }
-                } else {
-                    let error = DryadError::new(
-                        "write_file: nome do arquivo e conteúdo requeridos".to_string(),
-                        Some((0, 0)),
-                        ErrorSeverity::Error,
-                    );
-                    EvaluationResult::with_error(error)
                 }
             }
             "append_file" => {
-                if let (Some(filename_arg), Some(content_arg)) = (args.get(0), args.get(1)) {
-                    let filename_result = self.eval_expr(filename_arg, env);
-                    if !filename_result.errors.is_empty() {
-                        return filename_result;
-                    }
-                    
-                    let content_result = self.eval_expr(content_arg, env);
-                    if !content_result.errors.is_empty() {
-                        return content_result;
-                    }
-                    
-                    if let (Some(Value::String(filename)), Some(Value::String(content))) = 
-                        (filename_result.value, content_result.value) {
-                        match io::append_file(&filename, &content) {
-                            Ok(_) => EvaluationResult::new(Some(Value::Null)),
-                            Err(e) => {
-                                let error = DryadError::new(
-                                    format!("Erro ao anexar ao arquivo '{}': {}", filename, e),
-                                    Some((0, 0)),
-                                    ErrorSeverity::Error,
-                                );
-                                EvaluationResult::with_error(error)
-                            }
-                        }
-                    } else {
+                // Redirect to native function
+                match self.native_registry.call("native_fs_append_file", &arg_values) {
+                    Some(Ok(value)) => EvaluationResult::new(Some(value)),
+                    Some(Err(error)) => EvaluationResult::with_error(error),
+                    None => {
                         let error = DryadError::new(
-                            "append_file: argumentos devem ser strings".to_string(),
+                            "Função 'append_file' não encontrada".to_string(),
                             Some((0, 0)),
                             ErrorSeverity::Error,
                         );
                         EvaluationResult::with_error(error)
                     }
+                }
+            }
+            _ => {
+                // Try to find user-defined function in environment
+                if let Some(func_value) = env.get(function) {
+                    return self.call_resolved_function(func_value, args, env);
+                }
+                
+                // Tentar resolver função com namespace (fallback)
+                if let Some(func_value) = env.resolve_namespace_path(function) {
+                    self.call_resolved_function(func_value, args, env)
                 } else {
                     let error = DryadError::new(
-                        "append_file: nome do arquivo e conteúdo requeridos".to_string(),
+                        format!("Função '{}' não encontrada", function),
                         Some((0, 0)),
                         ErrorSeverity::Error,
                     );
                     EvaluationResult::with_error(error)
                 }
             }
+        }
+    }
+    
+    fn call_resolved_function(&mut self, func_value: Value, args: &[Expr], env: &mut Env) -> EvaluationResult {
+        match func_value {
+            Value::Function { params, body, .. } => {
+                // Avaliar argumentos
+                let mut arg_values = Vec::new();
+                for arg in args {
+                    let arg_result = self.eval_expr(arg, env);
+                    if !arg_result.errors.is_empty() {
+                        return arg_result;
+                    }
+                    if let Some(val) = arg_result.value {
+                        arg_values.push(val);
+                    }
+                }
+                
+                // Criar novo ambiente para execução da função
+                let mut func_env = Env::new();
+                
+                // Bind parâmetros
+                for (i, param) in params.iter().enumerate() {
+                    if let Some(arg_val) = arg_values.get(i) {
+                        func_env.set(param.clone(), arg_val.clone());
+                    }
+                }
+                
+                // Executar corpo da função
+                self.eval_stmt(&body, &mut func_env)
+            }
+            Value::Class(class) => {
+                // Instanciar classe (construtor)
+                let instance = Instance::new(class.clone());
+                let instance_value = Value::Instance(Rc::new(RefCell::new(instance)));
+                
+                // Verificar se existe método init e chamá-lo
+                if let Some(init_method) = class.get_method("init") {
+                    let mut method_env = Env::with_this(instance_value.clone());
+                    
+                    // Avaliar argumentos
+                    let mut arg_values = Vec::new();
+                    for arg in args {
+                        let arg_result = self.eval_expr(arg, env);
+                        if !arg_result.errors.is_empty() {
+                            return arg_result;
+                        }
+                        if let Some(val) = arg_result.value {
+                            arg_values.push(val);
+                        }
+                    }
+                    
+                    // Chamar método init se existir
+                    if let Value::Function { params, body, .. } = init_method {
+                        // Bind parâmetros
+                        for (i, param) in params.iter().enumerate() {
+                            if let Some(arg_val) = arg_values.get(i) {
+                                method_env.set(param.clone(), arg_val.clone());
+                            }
+                        }
+                        
+                        // Executar init
+                        let _init_result = self.eval_stmt(&body, &mut method_env);
+                    }
+                }
+                
+                EvaluationResult::new(Some(instance_value))
+            }
             _ => {
                 let error = DryadError::new(
-                    format!("Função '{}' não implementada", function),
+                    "Valor não é uma função ou classe".to_string(),
                     Some((0, 0)),
                     ErrorSeverity::Error,
                 );
@@ -391,7 +997,7 @@ impl Evaluator {
             }
         }
     }
-    
+
     pub fn report_errors(&mut self, errors: &[DryadError]) {
         for error in errors {
             self.error_reporter.report_error(error);

@@ -1,0 +1,9 @@
+// EXPECTED: João
+// Teste: Acesso a campos de instância
+class Person {
+    public name;
+}
+
+let p = new Person();
+p.name = "João";
+print(p.name);

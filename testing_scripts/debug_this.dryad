@@ -1,0 +1,13 @@
+// Test this keyword
+namespace Math.Utils {
+    class Vector {
+        fun init(x, y) {
+            print("In init method");
+            print(this);
+        }
+    }
+}
+
+print("Creating vector...");
+let vec = Math.Utils.Vector(3, 4);
+print("Done");

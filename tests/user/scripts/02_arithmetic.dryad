@@ -1,0 +1,4 @@
+// EXPECTED: 15
+// Teste: Operações aritméticas básicas
+let result = 10 + 5;
+print(result);

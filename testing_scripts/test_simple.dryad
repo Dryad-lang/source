@@ -1,0 +1,4 @@
+// Teste simples
+print("Hello World");
+let x = 5;
+print(x);

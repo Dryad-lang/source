@@ -1,0 +1,9 @@
+// tests/user/scripts/20_using_multiple.dryad
+// EXPECTED: 20
+// Teste: Multiple using statements
+
+use Math;
+use Geometry as Geo;
+
+let area = Geo.rectangleArea(4, 5);
+print(area);

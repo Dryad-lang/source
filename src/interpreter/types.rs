@@ -1,8 +1,7 @@
 // src/interpreter/types.rs
 
-use crate::interpreter::env::Value;
+use crate::interpreter::env::{Value, Env};
 use crate::parser::ast::{Expr, Stmt, BinaryOp};
-use crate::interpreter::env::Env;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Type {
@@ -10,6 +9,9 @@ pub enum Type {
     String,
     Bool,
     Null,
+    Class,
+    Instance,
+    Function,
     Any,
 }
 
@@ -44,6 +46,10 @@ impl TypeChecker {
             Value::String(_) => Type::String,
             Value::Bool(_) => Type::Bool,
             Value::Null => Type::Null,
+            Value::Class(_) => Type::Class,
+            Value::Instance(_) => Type::Instance,
+            Value::Function { .. } => Type::Function,
+            Value::Exception { .. } => Type::String, // Exceptions are treated as strings for type checking
         }
     }
 
@@ -102,6 +108,7 @@ impl TypeChecker {
     pub fn check_statement(&self, stmt: &Stmt, env: &Env) -> Option<TypeError> {
         match stmt {
             Stmt::Let { name: _, value } => self.check_expression(value, env),
+            Stmt::Assign { name: _, value } => self.check_expression(value, env),
             Stmt::Expr(expr) => self.check_expression(expr, env),
             Stmt::Block(stmts) => {
                 for stmt in stmts {
@@ -147,18 +154,61 @@ impl TypeChecker {
                 }
                 self.check_statement(body, env)
             }
+            Stmt::FunDecl { .. } => {
+                // TODO: Implementar verificação de tipos para declarações de função
+                None
+            }
+            Stmt::ClassDecl { .. } => {
+                // TODO: Implementar verificação de tipos para declarações de classe
+                None
+            }
+            Stmt::Return(expr) => {
+                if let Some(expr) = expr {
+                    self.check_expression(expr, env)
+                } else {
+                    None
+                }
+            }
+            Stmt::NamespaceDecl { .. } => {
+                // TODO: Implementar verificação de tipos para namespaces
+                None
+            }
+            Stmt::Using { module_path: _, alias: _ } => {
+                // Using statements don't need type checking by themselves
+                None
+            }
+            Stmt::Export { item } => {
+                // Check the exported item
+                self.check_statement(item, env)
+            }
+            Stmt::Try { try_block, catch_block, .. } => {
+                // Check both try and catch blocks
+                if let Some(error) = self.check_statement(try_block, env) {
+                    return Some(error);
+                }
+                self.check_statement(catch_block, env)
+            }
+            Stmt::Throw { value } => {
+                // Check the expression being thrown
+                self.check_expression(value, env)
+            }
         }
     }
 
     pub fn check_expression(&self, expr: &Expr, env: &Env) -> Option<TypeError> {
         match expr {
-            Expr::Number(_) | Expr::String(_) => None,
+            Expr::Number(_) | Expr::String(_) | Expr::Bool(_) | Expr::Null => None,
             Expr::Identifier(name) => {
-                if env.get(name).is_none() {
+                // Primeiro tenta busca normal, depois namespace path
+                if env.get(name).is_none() && env.resolve_namespace_path(name).is_none() {
                     Some(TypeError::UndefinedVariable(name.clone()))
                 } else {
                     None
                 }
+            }
+            Expr::Unary { op: _, expr } => {
+                // Verificar a expressão interna
+                self.check_expression(expr, env)
             }
             Expr::Binary { left, op, right } => {
                 if let Some(error) = self.check_expression(left, env) {
@@ -188,6 +238,8 @@ impl TypeChecker {
                     BinaryOp::Greater => ">",
                     BinaryOp::LessEqual => "<=",
                     BinaryOp::GreaterEqual => ">=",
+                    BinaryOp::And => "&&",
+                    BinaryOp::Or => "||",
                 };
                 
                 self.check_binary_op(&left_type, &right_type, op_str).err()
@@ -197,8 +249,48 @@ impl TypeChecker {
                 // TODO: Implementar verificação de tipos para funções
                 match function.as_str() {
                     "print" | "read_file" | "write_file" | "append_file" => None,
-                    _ => Some(TypeError::UndefinedVariable(function.clone())),
+                    _ => {
+                        // Verificar se é uma função ou classe válida (incluindo namespace paths)
+                        // Ou se é um método em um objeto existente
+                        if env.get(function).is_some() || env.resolve_namespace_path(function).is_some() {
+                            None
+                        } else if function.contains('.') {
+                            // Pode ser um método - verificar se o objeto existe
+                            let parts: Vec<&str> = function.split('.').collect();
+                            if parts.len() == 2 && env.get(parts[0]).is_some() {
+                                None // Objeto existe, assumir que método é válido
+                            } else {
+                                Some(TypeError::UndefinedVariable(function.clone()))
+                            }
+                        } else {
+                            Some(TypeError::UndefinedVariable(function.clone()))
+                        }
+                    }
                 }
+            }
+            Expr::This => {
+                // TODO: Verificar se estamos em contexto de método
+                None
+            }
+            Expr::Get { object, name: _ } => {
+                // Verificar se o objeto é uma instância
+                self.check_expression(object, env)
+            }
+            Expr::Set { object, name: _, value } => {
+                // Verificar objeto e valor
+                if let Some(error) = self.check_expression(object, env) {
+                    return Some(error);
+                }
+                self.check_expression(value, env)
+            }
+            Expr::New { class: _, args } => {
+                // Verificar argumentos
+                for arg in args {
+                    if let Some(error) = self.check_expression(arg, env) {
+                        return Some(error);
+                    }
+                }
+                None
             }
         }
     }
@@ -207,8 +299,23 @@ impl TypeChecker {
         match expr {
             Expr::Number(_) => Some(Type::Number),
             Expr::String(_) => Some(Type::String),
+            Expr::Bool(_) => Some(Type::Bool),
+            Expr::Null => Some(Type::Null),
+            Expr::Unary { op: _, expr } => {
+                // Operadores unários geralmente retornam bool ou o mesmo tipo da expressão
+                match self.infer_expression_type(expr, env) {
+                    Some(Type::Number) => Some(Type::Number), // para operador -
+                    _ => Some(Type::Bool), // para operador !
+                }
+            }
             Expr::Identifier(name) => {
-                env.get(name).map(|value| self.infer_type(&value))
+                if let Some(value) = env.get(name) {
+                    Some(self.infer_type(&value))
+                } else if let Some(value) = env.resolve_namespace_path(name) {
+                    Some(self.infer_type(&value))
+                } else {
+                    None
+                }
             }
             Expr::Binary { left, op, right } => {
                 let left_type = self.infer_expression_type(left, env)?;
@@ -225,6 +332,8 @@ impl TypeChecker {
                     BinaryOp::Greater => ">",
                     BinaryOp::LessEqual => "<=",
                     BinaryOp::GreaterEqual => ">=",
+                    BinaryOp::And => "&&",
+                    BinaryOp::Or => "||",
                 };
                 
                 self.check_binary_op(&left_type, &right_type, op_str).ok()
@@ -234,8 +343,33 @@ impl TypeChecker {
                     "print" => Some(Type::Null),
                     "read_file" => Some(Type::String),
                     "write_file" | "append_file" => Some(Type::Null),
-                    _ => None,
+                    _ => {
+                        // Para funções/classes em namespace, retornar tipo baseado no valor
+                        if let Some(value) = env.get(function).or_else(|| env.resolve_namespace_path(function)) {
+                            match value {
+                                Value::Function { .. } => Some(Type::Any), // Tipo de retorno da função
+                                Value::Class(_) => Some(Type::Instance), // Instanciação de classe
+                                _ => Some(Type::Any),
+                            }
+                        } else {
+                            None
+                        }
+                    }
                 }
+            }
+            Expr::This => {
+                // TODO: Inferir tipo baseado no contexto da classe
+                Some(Type::Instance)
+            }
+            Expr::Get { object: _, name: _ } => {
+                // TODO: Inferir tipo baseado no campo acessado
+                Some(Type::Any)
+            }
+            Expr::Set { object: _, name: _, value } => {
+                self.infer_expression_type(value, env)
+            }
+            Expr::New { class: _, args: _ } => {
+                Some(Type::Instance)
             }
         }
     }

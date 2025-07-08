@@ -1,0 +1,12 @@
+// Test without namespace
+class Simple {
+    fun greet() {
+        return "Hello";
+    }
+}
+
+let obj = Simple();
+print("Object created");
+let msg = obj.greet();
+print("Method called");
+print(msg);

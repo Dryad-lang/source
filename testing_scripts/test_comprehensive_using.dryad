@@ -1,0 +1,43 @@
+// test_comprehensive_using.dryad
+// Teste abrangente do sistema de using/export
+
+// 1. Teste de namespace no mesmo arquivo
+namespace Utils.String {
+    export fun concat(a, b) {
+        return a + " " + b;
+    }
+    
+    export class StringBuilder {
+        fun build(parts) {
+            return "StringBuilder result: " + parts;
+        }
+    }
+}
+
+// 2. Teste de using de namespace completo com alias
+use Utils.String as StringUtils;
+
+// 3. Teste de importação de módulo externo
+use simple_math as Math;
+
+print("=== Teste 1: Using namespace local ===");
+let result1 = StringUtils.concat("Hello", "World");
+print(result1);
+
+let builder = StringUtils.StringBuilder();
+let result2 = builder.build("test");
+print(result2);
+
+print("=== Teste 2: Using módulo externo ===");
+let sum = Math.add(10, 25);
+print("10 + 25 =");
+print(sum);
+
+let product = Math.multiply(6, 7);
+print("6 * 7 =");
+print(product);
+
+let calc = Math.Calculator();
+let calcResult = calc.multiply(3, 8);
+print("Calculator: 3 * 8 =");
+print(calcResult);

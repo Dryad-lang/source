@@ -1,0 +1,89 @@
+// test_core_common_lib.dryad
+// Teste da common lib core.* (types e meta)
+
+// Teste do core.types
+use core.Types as Types;
+
+let num = 42;
+let str = "hello";
+let flag = true;
+let nothing = null;
+
+println("=== Teste core.Types ===");
+
+// Testes de typeof
+println("typeof(42):", Types.typeof(num));
+println("typeof('hello'):", Types.typeof(str));
+println("typeof(true):", Types.typeof(flag));
+println("typeof(null):", Types.typeof(nothing));
+
+// Testes de isX
+println("isNumber(42):", Types.isNumber(num));
+println("isNumber('hello'):", Types.isNumber(str));
+println("isString('hello'):", Types.isString(str));
+println("isString(42):", Types.isString(num));
+println("isBool(true):", Types.isBool(flag));
+println("isBool(42):", Types.isBool(num));
+println("isNull(null):", Types.isNull(nothing));
+println("isNull(42):", Types.isNull(num));
+
+// Testes de conversões
+println("toString(42):", Types.toString(num));
+println("toString(true):", Types.toString(flag));
+println("toString(null):", Types.toString(nothing));
+println("toNumber('123'):", Types.toNumber("123"));
+println("toNumber('abc'):", Types.toNumber("abc"));
+println("toNumber(true):", Types.toNumber(flag));
+println("toBool(1):", Types.toBool(1));
+println("toBool(0):", Types.toBool(0));
+println("toBool('hello'):", Types.toBool("hello"));
+println("toBool(''):", Types.toBool(""));
+
+// Testes de comparação
+println("equals(42, 42):", Types.equals(42, 42));
+println("equals(42, '42'):", Types.equals(42, "42"));
+println("equals(null, null):", Types.equals(null, null));
+
+// Testes de validação
+println("isValid(42):", Types.isValid(num));
+println("isValid(null):", Types.isValid(nothing));
+println("isEmpty(''):", Types.isEmpty(""));
+println("isEmpty('hello'):", Types.isEmpty("hello"));
+
+println("");
+println("=== Teste core.Meta ===");
+
+// Teste do core.meta
+use core.Meta as Meta;
+
+// Testes básicos (muitos retornarão 'não implementado ainda')
+try {
+    let modules = Meta.getLoadedModules();
+    println("Módulos carregados:", modules);
+} catch (e) {
+    println("Erro ao obter módulos:", e);
+}
+
+try {
+    let scope = Meta.getCurrentScope();
+    println("Escopo atual:", scope);
+} catch (e) {
+    println("Erro ao obter escopo:", e);
+}
+
+try {
+    let vars = Meta.getAllVariables();
+    println("Todas as variáveis:", vars);
+} catch (e) {
+    println("Erro ao obter variáveis:", e);
+}
+
+// Teste de clonagem
+let original = "teste";
+let cloned = Meta.cloneObject(original);
+println("Original:", original);
+println("Clonado:", cloned);
+println("São iguais:", Types.equals(original, cloned));
+
+println("");
+println("=== Teste finalizado ===");

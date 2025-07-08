@@ -192,8 +192,19 @@ impl DryadCli {
         let mut parser = Parser::new(lexer);
         let mut env = Env::new();
         
+        if args.verbose {
+            println!("Parsing code: {}", code);
+        }
+        
+        let mut statement_count = 0;
+        
         // Parse and execute statements
         while let Some(stmt) = parser.parse_statement() {
+            statement_count += 1;
+            if args.verbose {
+                println!("Executing statement #{}: {:?}", statement_count, stmt);
+            }
+            
             let result = self.evaluator.eval_stmt(&stmt, &mut env);
             
             if !result.errors.is_empty() {
@@ -212,6 +223,10 @@ impl DryadCli {
                     println!("Result: {:?}", value);
                 }
             }
+        }
+        
+        if args.verbose {
+            println!("Total statements processed: {}", statement_count);
         }
         
         Ok(())

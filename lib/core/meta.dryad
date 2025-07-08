@@ -1,0 +1,145 @@
+// lib/core/meta.dryad
+// Módulo de meta-programação e reflection para Dryad
+
+namespace core {
+    export class Meta {
+        // Reflection básica
+        public fun getClassName(instance) {
+            return native_core_get_class_name(instance);
+        }
+        
+        public fun getClassMethods(classOrInstance) {
+            return native_core_get_class_methods(classOrInstance);
+        }
+        
+        public fun getClassFields(classOrInstance) {
+            return native_core_get_class_fields(classOrInstance);
+        }
+        
+        public fun hasMethod(instance, methodName) {
+            return native_core_has_method(instance, methodName);
+        }
+        
+        public fun hasField(instance, fieldName) {
+            return native_core_has_field(instance, fieldName);
+        }
+        
+        public fun callMethod(instance, methodName, args) {
+            return native_core_call_method(instance, methodName, args);
+        }
+        
+        public fun getField(instance, fieldName) {
+            return native_core_get_field(instance, fieldName);
+        }
+        
+        public fun setField(instance, fieldName, value) {
+            return native_core_set_field(instance, fieldName, value);
+        }
+        
+        // Eval e execução dinâmica
+        public fun eval(code) {
+            return native_core_eval(code);
+        }
+        
+        public fun evalFile(filename) {
+            return native_core_eval_file(filename);
+        }
+        
+        public fun compile(code) {
+            return native_core_compile(code);
+        }
+        
+        // Análise de módulos
+        public fun getLoadedModules() {
+            return native_core_get_loaded_modules();
+        }
+        
+        public fun getModuleInfo(moduleName) {
+            return native_core_get_module_info(moduleName);
+        }
+        
+        public fun getModuleExports(moduleName) {
+            return native_core_get_module_exports(moduleName);
+        }
+        
+        public fun isModuleLoaded(moduleName) {
+            return native_core_is_module_loaded(moduleName);
+        }
+        
+        public fun reloadModule(moduleName) {
+            return native_core_reload_module(moduleName);
+        }
+        
+        public fun unloadModule(moduleName) {
+            return native_core_unload_module(moduleName);
+        }
+        
+        // Análise de ambiente
+        public fun getEnvironmentVars() {
+            return native_core_get_environment_vars();
+        }
+        
+        public fun getCurrentScope() {
+            return native_core_get_current_scope();
+        }
+        
+        public fun getGlobalScope() {
+            return native_core_get_global_scope();
+        }
+        
+        public fun getAllVariables() {
+            return native_core_get_all_variables();
+        }
+        
+        // Debugging e profiling
+        public fun getStackTrace() {
+            return native_core_get_stack_trace();
+        }
+        
+        public fun getCallStack() {
+            return native_core_get_call_stack();
+        }
+        
+        public fun getMemoryUsage() {
+            return native_core_get_memory_usage();
+        }
+        
+        public fun getPerformanceInfo() {
+            return native_core_get_performance_info();
+        }
+        
+        // Utilitários avançados
+        public fun cloneObject(obj) {
+            return native_core_clone_object(obj);
+        }
+        
+        public fun deepClone(obj) {
+            return native_core_deep_clone(obj);
+        }
+        
+        public fun serialize(obj) {
+            return native_core_serialize(obj);
+        }
+        
+        public fun deserialize(data) {
+            return native_core_deserialize(data);
+        }
+        
+        // Aliases para compatibilidade
+        public fun reflect(obj) {
+            return {
+                className: this.getClassName(obj),
+                methods: this.getClassMethods(obj),
+                fields: this.getClassFields(obj)
+            };
+        }
+        
+        public fun execute(code) {
+            return this.eval(code);
+        }
+        
+        public fun introspect(obj) {
+            return this.reflect(obj);
+        }
+    }
+}

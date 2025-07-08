@@ -1,0 +1,24 @@
+// Test to see if field assignment works
+namespace Math.Utils {
+    class Vector {
+        public x;
+        public y;
+        
+        fun init(x, y) {
+            print("Init starting");
+            // Try a simple assignment first
+            print("Setting this.x");
+            print("Done with init");
+        }
+        
+        fun name() {
+            return "Vector2D";
+        }
+    }
+}
+
+print("Creating vector...");
+let vec = Math.Utils.Vector(3, 4);
+print("Getting name...");
+let name = vec.name();
+print(name);

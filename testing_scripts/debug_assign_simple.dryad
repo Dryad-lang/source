@@ -1,0 +1,15 @@
+// Test assignment without namespace
+class Vector {
+    public x;
+    
+    fun init(val) {
+        print("Before assignment");
+        this.x = val;
+        print("After assignment");
+        print(this.x);
+    }
+}
+
+print("Creating vector...");
+let vec = Vector(42);
+print("Done");

@@ -1,0 +1,12 @@
+// Simple debug script with call
+namespace Math {
+    class PI {
+        fun value() {
+            return 3.14;
+        }
+    }
+}
+
+print("Testing access with call...");
+let pi = Math.PI();
+print("Success!");

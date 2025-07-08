@@ -1,0 +1,44 @@
+// test_edge_cases.dryad
+// Testes de casos extremos do sistema using/export
+
+// Teste 1: Using sem alias (deveria usar o último nome do path)
+namespace Deep.Nested.Utils {
+    export fun deepFunction() {
+        return "Function from deep namespace";
+    }
+}
+
+use Deep.Nested.Utils;
+
+print("=== Teste 1: Using sem alias ===");
+let result1 = Utils.deepFunction();
+print(result1);
+
+// Teste 2: Multiple uses do mesmo namespace com diferentes aliases
+use Deep.Nested.Utils as DNU;
+use Deep.Nested.Utils as UtilsAlias;
+
+print("=== Teste 2: Múltiplos aliases ===");
+let result2 = DNU.deepFunction();
+print(result2);
+
+let result3 = UtilsAlias.deepFunction();
+print(result3);
+
+// Teste 3: Namespace dentro de namespace
+namespace Outer {
+    namespace Inner {
+        export class NestedClass {
+            fun greet() {
+                return "Hello from nested class!";
+            }
+        }
+    }
+}
+
+use Outer.Inner as OI;
+
+print("=== Teste 3: Namespace aninhado ===");
+let nested = OI.NestedClass();
+let greeting = nested.greet();
+print(greeting);

@@ -1,0 +1,7 @@
+// test_class_basic.dryad
+class TestClass {
+    public field1;
+}
+
+let obj = new TestClass();
+print("Teste básico de classe funcionando!");

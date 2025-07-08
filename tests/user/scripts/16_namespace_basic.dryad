@@ -1,0 +1,14 @@
+// tests/user/scripts/16_namespace_basic.dryad
+// EXPECTED: 3.14
+// Teste: Namespace básico com classe
+namespace Math {
+    class PI {
+        fun value() {
+            return 3.14;
+        }
+    }
+}
+
+let pi_instance = Math.PI();
+let x = pi_instance.value();
+print(x);

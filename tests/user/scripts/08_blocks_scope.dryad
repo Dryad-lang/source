@@ -1,0 +1,8 @@
+// EXPECTED: 15
+// Teste: Blocos e escopo de variáveis
+let x = 10;
+{
+    let y = 5;
+    let sum = x + y;
+    print(sum);
+}

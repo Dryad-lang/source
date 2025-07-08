@@ -1,0 +1,13 @@
+// Test nested namespace
+namespace Math.Utils {
+    class Test {
+        fun hello() {
+            return "Hello from nested namespace";
+        }
+    }
+}
+
+print("Testing nested namespace...");
+let obj = Math.Utils.Test();
+let msg = obj.hello();
+print(msg);

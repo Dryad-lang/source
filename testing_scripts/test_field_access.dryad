@@ -1,0 +1,8 @@
+// test_field_access.dryad
+class Person {
+    public name;
+}
+
+let p = new Person();
+p.name = "João";
+print(p.name);

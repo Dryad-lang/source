@@ -1,0 +1,14 @@
+// Simple test to check parsing behavior
+namespace Test {
+    class Simple {
+        fun greet() {
+            return "Hello";
+        }
+    }
+}
+
+let obj = Test.Simple();
+print("Object created");
+let msg = obj.greet();
+print("Method called");
+print(msg);

@@ -1,0 +1,60 @@
+// tests/modules/math_utils.dryad
+// Módulo com utilitários matemáticos para teste de export/import
+
+export namespace Math {
+    export class Vector2D {
+        public x;
+        public y;
+        
+        fun init(x, y) {
+            // this.x = x;  // TODO: Field assignment ainda não implementado
+            // this.y = y;  // TODO: Field assignment ainda não implementado
+        }
+        
+        fun magnitude() {
+            // return sqrt(this.x * this.x + this.y * this.y);  // Simplified for now
+            return 5.0;
+        }
+        
+        fun toString() {
+            return "Vector2D";
+        }
+    }
+    
+    export class Point {
+        public x;
+        public y;
+        
+        fun init(x, y) {
+            // this.x = x;  // TODO: Field assignment ainda não implementado
+            // this.y = y;  // TODO: Field assignment ainda não implementado
+        }
+        
+        fun distance(other) {
+            return 10.0; // Simplified for now
+        }
+    }
+    
+    export fun PI() {
+        return 3.14159;
+    }
+    
+    export fun max(a, b) {
+        if a > b {
+            return a;
+        } else {
+            return b;
+        }
+    }
+}
+
+export namespace Geometry {
+    export fun circleArea(radius) {
+        let pi = Math.PI();
+        return pi * radius * radius;
+    }
+    
+    export fun rectangleArea(width, height) {
+        return width * height;
+    }
+}

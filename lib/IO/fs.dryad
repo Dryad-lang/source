@@ -1,0 +1,86 @@
+// lib/IO/fs.dryad
+// Módulo de sistema de arquivos para Dryad
+
+namespace IO {
+    export class FileSystem {
+        // Operações básicas de arquivo
+        public fun readFile(filename) {
+            return native_fs_read_file(filename);
+        }
+        
+        public fun writeFile(filename, content) {
+            return native_fs_write_file(filename, content);
+        }
+        
+        public fun appendFile(filename, content) {
+            return native_fs_append_file(filename, content);
+        }
+        
+        public fun fileExists(filename) {
+            return native_fs_file_exists(filename);
+        }
+        
+        public fun deleteFile(filename) {
+            return native_fs_delete_file(filename);
+        }
+        
+        // Aliases convenientes
+        public fun read(filename) {
+            return this.readFile(filename);
+        }
+        
+        public fun write(filename, content) {
+            return this.writeFile(filename, content);
+        }
+        
+        public fun append(filename, content) {
+            return this.appendFile(filename, content);
+        }
+        
+        public fun exists(filename) {
+            return this.fileExists(filename);
+        }
+        
+        public fun delete(filename) {
+            return this.deleteFile(filename);
+        }
+    }
+    
+    export class Directory {
+        // Operações de diretório (implementação futura)
+        public fun create(path) {
+            return native_fs_create_dir(path);
+        }
+        
+        public fun exists(path) {
+            return native_fs_dir_exists(path);
+        }
+        
+        public fun list(path) {
+            return native_fs_list_dir(path);
+        }
+        
+        public fun remove(path) {
+            return native_fs_remove_dir(path);
+        }
+    }
+    
+    export class Path {
+        // Utilitários de caminho (implementação futura)
+        public fun join(...parts) {
+            return native_fs_path_join(parts);
+        }
+        
+        public fun basename(path) {
+            return native_fs_path_basename(path);
+        }
+        
+        public fun dirname(path) {
+            return native_fs_path_dirname(path);
+        }
+        
+        public fun extension(path) {
+            return native_fs_path_extension(path);
+        }
+    }
+}

@@ -12,11 +12,24 @@ pub enum Token {
     Return,
     Export,
     Use,
+    Class,
+    New,
+    This,
+    Public,
+    Private,
+    Protected,
+    Namespace,
+    Try,
+    Catch,
+    Throw,
 
     // Literais
     Identifier(String),
     Number(f64),
     String(String),
+    True,
+    False,
+    Null,
 
     // Operadores
     Plus,
@@ -31,6 +44,8 @@ pub enum Token {
     LessEqual,
     Greater,
     GreaterEqual,
+    And,        // &&
+    Or,         // ||
 
     // Símbolos
     LParen,
@@ -39,6 +54,7 @@ pub enum Token {
     RBrace,
     Comma,
     Semicolon,
+    Dot,
 
     // Fim
     Eof,

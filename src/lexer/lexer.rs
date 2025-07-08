@@ -63,6 +63,7 @@ impl Lexer {
             '}' => Token::RBrace,
             ',' => Token::Comma,
             ';' => Token::Semicolon,
+            '.' => Token::Dot,
             '"' => self.read_string(),
             ch if ch.is_ascii_digit() => self.read_number(ch),
             ch if Self::is_identifier_start(ch) => self.read_identifier(ch),
@@ -152,6 +153,12 @@ impl Lexer {
             "return" => Token::Return,
             "use" => Token::Use,
             "export" => Token::Export,
+            "class" => Token::Class,
+            "new" => Token::New,
+            "this" => Token::This,
+            "public" => Token::Public,
+            "private" => Token::Private,
+            "protected" => Token::Protected,
             _ => Token::Identifier(ident),
         }
     }

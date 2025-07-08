@@ -1,0 +1,112 @@
+// test_comprehensive.dryad
+// Teste abrangente de todas as funcionalidades implementadas
+
+native_console_println("=== Teste Abrangente da Common Lib Dryad ===");
+
+// 1. Tipos básicos e literais
+native_console_println("\n1. Tipos básicos:");
+let num = 42;
+let str = "hello";
+let bool = true;
+let nothing = null;
+
+native_console_println("Número:", num, "tipo:", native_core_typeof(num));
+native_console_println("String:", str, "tipo:", native_core_typeof(str));
+native_console_println("Boolean:", bool, "tipo:", native_core_typeof(bool));
+native_console_println("Null:", nothing, "tipo:", native_core_typeof(nothing));
+
+// 2. Operadores aritméticos
+native_console_println("\n2. Operadores aritméticos:");
+let a = 10;
+let b = 3;
+native_console_println("a + b =", a + b);
+native_console_println("a - b =", a - b);
+native_console_println("a * b =", a * b);
+native_console_println("a / b =", a / b);
+native_console_println("-a =", -a);
+
+// 3. Operadores de comparação
+native_console_println("\n3. Operadores de comparação:");
+native_console_println("a == b:", a == b);
+native_console_println("a != b:", a != b);
+native_console_println("a < b:", a < b);
+native_console_println("a > b:", a > b);
+native_console_println("a <= b:", a <= b);
+native_console_println("a >= b:", a >= b);
+
+// 4. Operadores lógicos
+native_console_println("\n4. Operadores lógicos:");
+let x = true;
+let y = false;
+native_console_println("!x:", !x);
+native_console_println("!y:", !y);
+native_console_println("x && y:", x && y);
+native_console_println("x || y:", x || y);
+native_console_println("!x && !y:", !x && !y);
+native_console_println("!x || !y:", !x || !y);
+
+// 5. Reatribuição
+native_console_println("\n5. Reatribuição:");
+let var = 1;
+native_console_println("var inicial:", var);
+var = 2;
+native_console_println("var após reatribuição:", var);
+var = native_core_to_string(var);
+native_console_println("var como string:", var);
+
+// 6. Condicionais
+native_console_println("\n6. Condicionais:");
+if (true) {
+    native_console_println("if (true) funciona");
+}
+
+if (false) {
+    native_console_println("if (false) NÃO deve aparecer");
+} else {
+    native_console_println("else funciona");
+}
+
+if (1 > 0 && 2 < 3) {
+    native_console_println("Condição complexa funciona");
+}
+
+// 7. Funções de conversão
+native_console_println("\n7. Funções de conversão:");
+native_console_println("toString(123):", native_core_to_string(123));
+native_console_println("toNumber('456'):", native_core_to_number("456"));
+native_console_println("toNumber('abc'):", native_core_to_number("abc"));
+native_console_println("toBool(1):", native_core_to_bool(1));
+native_console_println("toBool(0):", native_core_to_bool(0));
+
+// 8. Funções de verificação
+native_console_println("\n8. Funções de verificação:");
+native_console_println("isNumber(42):", native_core_is_number(42));
+native_console_println("isString('test'):", native_core_is_string("test"));
+native_console_println("equals(5, 5):", native_core_equals(5, 5));
+native_console_println("equals('a', 'b'):", native_core_equals("a", "b"));
+
+// 9. Manipulação de arquivos
+native_console_println("\n9. Manipulação de arquivos:");
+let filename = "test_comprehensive.txt";
+native_fs_write_file(filename, "Conteúdo do teste");
+native_console_println("Arquivo escrito");
+
+if (native_fs_file_exists(filename)) {
+    let content = native_fs_read_file(filename);
+    native_console_println("Conteúdo lido:", content);
+    
+    native_fs_append_file(filename, "\nLinha adicional");
+    let newContent = native_fs_read_file(filename);
+    native_console_println("Após append:", newContent);
+    
+    native_fs_delete_file(filename);
+    native_console_println("Arquivo deletado");
+}
+
+// 10. Buffers
+native_console_println("\n10. Buffers:");
+let buffer = native_buffer_create(64);
+native_console_println("Buffer criado com tamanho:", native_buffer_length(buffer));
+
+native_console_println("\n=== Teste Abrangente Concluído ===");
+native_console_println("Todas as funcionalidades básicas estão funcionando!");

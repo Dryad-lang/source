@@ -1,0 +1,92 @@
+// lib/core/types.dryad
+// Módulo de inspeção e conversão de tipos para Dryad
+
+namespace core {
+    export class Types {
+        // Inspeção de tipos
+        public fun typeof(value) {
+            return native_core_typeof(value);
+        }
+        
+        public fun isNumber(value) {
+            return native_core_is_number(value);
+        }
+        
+        public fun isString(value) {
+            return native_core_is_string(value);
+        }
+        
+        public fun isBool(value) {
+            return native_core_is_bool(value);
+        }
+        
+        public fun isNull(value) {
+            return native_core_is_null(value);
+        }
+        
+        public fun isFunction(value) {
+            return native_core_is_function(value);
+        }
+        
+        public fun isClass(value) {
+            return native_core_is_class(value);
+        }
+        
+        public fun isInstance(value) {
+            return native_core_is_instance(value);
+        }
+        
+        public fun isException(value) {
+            return native_core_is_exception(value);
+        }
+        
+        // Conversões de tipos
+        public fun toString(value) {
+            return native_core_to_string(value);
+        }
+        
+        public fun toNumber(value) {
+            return native_core_to_number(value);
+        }
+        
+        public fun toBool(value) {
+            return native_core_to_bool(value);
+        }
+        
+        // Comparações avançadas
+        public fun equals(a, b) {
+            return native_core_equals(a, b);
+        }
+        
+        public fun deepEquals(a, b) {
+            return native_core_deep_equals(a, b);
+        }
+        
+        // Validação e verificação
+        public fun isValid(value) {
+            return !this.isNull(value) && !this.isException(value);
+        }
+        
+        public fun isEmpty(value) {
+            if (this.isString(value)) {
+                return native_core_string_is_empty(value);
+            } else if (this.isNull(value)) {
+                return true;
+            }
+            return false;
+        }
+        
+        // Aliases para compatibilidade
+        public fun typeOf(value) {
+            return this.typeof(value);
+        }
+        
+        public fun stringify(value) {
+            return this.toString(value);
+        }
+        
+        public fun parse(value) {
+            return this.toNumber(value);
+        }
+    }
+}

@@ -1,0 +1,12 @@
+// test_simple_loop.dryad
+// Teste simples de loop
+
+native_console_println("Testando loop simples");
+
+let i = 0;
+while i < 5 {
+    native_console_println("i =", i);
+    i = i + 1;
+}
+
+native_console_println("Loop finalizado");

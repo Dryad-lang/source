@@ -1,0 +1,20 @@
+// Test constructor with arguments
+namespace Math.Utils {
+    class Vector {
+        public x;
+        public y;
+        
+        fun init(x, y) {
+            this.x = x;
+            this.y = y;
+        }
+        
+        fun name() {
+            return "Vector2D";
+        }
+    }
+}
+
+print("Creating vector with arguments...");
+let vec = Math.Utils.Vector(3, 4);
+print("Vector created");

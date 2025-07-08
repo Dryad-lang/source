@@ -1,0 +1,4 @@
+// EXPECTED: Hello World
+// Teste: Concatenação de strings
+let greeting = "Hello " + "World";
+print(greeting);

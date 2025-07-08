@@ -1,0 +1,10 @@
+// Simple debug script
+namespace Math {
+    class PI {
+        fun value() {
+            return 3.14;
+        }
+    }
+}
+
+print("Testing simple access...");

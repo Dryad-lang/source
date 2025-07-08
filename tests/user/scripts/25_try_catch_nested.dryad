@@ -1,0 +1,13 @@
+// tests/user/scripts/24_try_catch_nested.dryad
+// EXPECTED: Erro interno
+// Teste: Try-Catch aninhado
+
+try {
+    try {
+        throw "Erro interno";
+    } catch (inner) {
+        print(inner); // Funciona!
+    }
+} catch (outer) {
+    // Não executa
+}

@@ -1,0 +1,49 @@
+// lib/IO/console.dryad
+// Módulo de console I/O para Dryad
+
+namespace IO {
+    export class Console {
+        // Função principal para imprimir com nova linha
+        public fun println(...args) {
+            return native_console_println(args);
+        }
+
+        // Função para imprimir sem nova linha
+        public fun print(...args) {
+            return native_console_print(args);
+        }
+
+        // Função para ler entrada do usuário
+        public fun input(prompt) {
+            if (prompt) {
+                return native_console_input(prompt);
+            } else {
+                return native_console_input();
+            }
+        }
+
+        // Função para ler entrada sem prompt
+        public fun readLine() {
+            return native_console_input();
+        }
+
+        // Aliases comuns
+        public fun log(...args) {
+            return this.println(args);
+        }
+
+        public fun write(...args) {
+            return this.print(args);
+        }
+        
+        // Métodos utilitários
+        public fun clear() {
+            // Clear console (implementação futura)
+            return native_console_clear();
+        }
+        
+        public fun newLine() {
+            return native_console_println();
+        }
+    }
+}

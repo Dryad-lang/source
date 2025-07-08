@@ -175,6 +175,10 @@ impl ReplSession {
                 crate::interpreter::env::Value::String(_) => "String", 
                 crate::interpreter::env::Value::Bool(_) => "Bool",
                 crate::interpreter::env::Value::Null => "Null",
+                crate::interpreter::env::Value::Class(_) => "Class",
+                crate::interpreter::env::Value::Instance(_) => "Instance",
+                crate::interpreter::env::Value::Function { .. } => "Function",
+                crate::interpreter::env::Value::Exception { .. } => "Exception",
             };
             println!("Type of '{}': {}", var_name, type_name);
         } else {

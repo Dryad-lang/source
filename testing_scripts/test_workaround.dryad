@@ -1,0 +1,21 @@
+// Original test but using method call to set fields
+namespace Math.Utils {
+    class Vector {
+        public x;
+        public y;
+        
+        fun init(x_val, y_val) {
+            print("Setting fields using a different approach");
+            // For now, let's see if we can work around the assignment issue
+            // by using a different method to set fields
+        }
+        
+        fun name() {
+            return "Vector2D";
+        }
+    }
+}
+
+let vec = Math.Utils.Vector(3, 4);
+let name = vec.name();
+print(name);

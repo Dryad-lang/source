@@ -1,0 +1,16 @@
+// Test simple assignment
+namespace Math.Utils {
+    class Vector {
+        public x;
+        
+        fun init(val) {
+            print("Before assignment");
+            this.x = val;
+            print("After assignment");
+        }
+    }
+}
+
+print("Creating vector...");
+let vec = Math.Utils.Vector(42);
+print("Done");

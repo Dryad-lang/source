@@ -1,0 +1,5 @@
+class SimpleClass {
+    public name;
+}
+
+print("Classe criada com sucesso!");

@@ -1,0 +1,83 @@
+// test_try_catch_comprehensive.dryad
+// Teste abrangente do sistema try-catch
+
+print("=== SISTEMA TRY-CATCH - TESTE ABRANGENTE ===");
+
+// 1. Try-catch básico
+print("1. Básico:");
+try {
+    print("Código normal executado");
+} catch (e) {
+    print("Este catch não deveria executar");
+}
+
+// 2. Throw e catch de string
+print("2. String exception:");
+try {
+    throw "Mensagem de erro";
+} catch (msg) {
+    print("Capturado:");
+    print(msg);
+}
+
+// 3. Throw e catch de número
+print("3. Number exception:");
+try {
+    throw 42;
+} catch (num) {
+    print("Número capturado:");
+    print(num);
+}
+
+// 4. Exception em função
+print("4. Exception em função:");
+fun mayFail(shouldFail) {
+    if (shouldFail) {
+        throw "Função falhou!";
+    }
+    return "Função sucedeu!";
+}
+
+try {
+    let result = mayFail(false);
+    print(result);
+} catch (e) {
+    print("Erro não esperado");
+}
+
+try {
+    let result = mayFail(true);
+    print("Nunca deveria imprimir isso");
+} catch (e) {
+    print("Erro esperado:");
+    print(e);
+}
+
+// 5. Exception em classe
+print("5. Exception em classe:");
+class Worker {
+    fun doWork(task) {
+        if (task == "impossible") {
+            throw "Tarefa impossível!";
+        }
+        return "Trabalho concluído: " + task;
+    }
+}
+
+let worker = Worker();
+try {
+    let result = worker.doWork("easy");
+    print(result);
+} catch (e) {
+    print("Erro inesperado");
+}
+
+try {
+    let result = worker.doWork("impossible");
+    print("Nunca deveria chegar aqui");
+} catch (e) {
+    print("Erro do worker:");
+    print(e);
+}
+
+print("=== TODOS OS TESTES PASSARAM! ===");

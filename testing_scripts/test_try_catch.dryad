@@ -1,0 +1,65 @@
+// test_try_catch.dryad
+// Teste do sistema try-catch implementado
+
+print("=== TESTE DO SISTEMA TRY-CATCH ===");
+
+// Teste 1: Try-catch básico
+print("1. Try-catch básico:");
+try {
+    print("Executando código seguro...");
+    let x = 10;
+    print(x);
+} catch (e) {
+    print("Erro capturado:");
+    print(e);
+}
+
+// Teste 2: Throw de string
+print("2. Throwing string exception:");
+try {
+    print("Antes do throw...");
+    throw "Este é um erro de teste!";
+    print("Esta linha não deveria executar");
+} catch (error) {
+    print("Exceção capturada:");
+    print(error);
+}
+
+// Teste 3: Throw de número
+print("3. Throwing number exception:");
+try {
+    throw 404;
+    print("Esta linha não deveria executar");
+} catch (e) {
+    print("Número capturado:");
+    print(e);
+}
+
+// Teste 4: Try sem catch parameter
+print("4. Try-catch sem parâmetro:");
+try {
+    throw "Erro sem parâmetro";
+} catch {
+    print("Erro capturado (sem acesso ao valor)");
+}
+
+// Teste 5: Try aninhado
+print("5. Try-catch aninhado:");
+try {
+    print("Try externo iniciado...");
+    try {
+        print("Try interno iniciado...");
+        throw "Erro do try interno";
+        print("Esta linha não deveria executar");
+    } catch (inner_error) {
+        print("Erro interno capturado:");
+        print(inner_error);
+        throw "Erro propagado do catch interno";
+    }
+    print("Esta linha não deveria executar");
+} catch (outer_error) {
+    print("Erro externo capturado:");
+    print(outer_error);
+}
+
+print("=== TODOS OS TESTES DE TRY-CATCH CONCLUÍDOS ===");

@@ -1,0 +1,7 @@
+// test_instantiation.dryad
+class Person {
+    public name;
+}
+
+let p = new Person();
+print("Instância criada!");

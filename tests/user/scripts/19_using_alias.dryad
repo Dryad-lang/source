@@ -1,0 +1,9 @@
+// tests/user/scripts/19_using_alias.dryad
+// EXPECTED: Vector2D
+// Teste: Using com alias
+
+use Math.Vector2D as Vec;
+
+let vector = Vec(3, 4);
+let name = vector.toString();
+print(name);

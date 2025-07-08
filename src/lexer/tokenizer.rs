@@ -28,7 +28,15 @@ impl Lexer {
             '+' => Token::Plus,
             '-' => Token::Minus,
             '*' => Token::Star,
-            '/' => Token::Slash,
+            '/' => {
+                if self.match_char('/') {
+                    // Comentário de linha - pular até o fim da linha
+                    self.skip_line_comment();
+                    self.next_token()
+                } else {
+                    Token::Slash
+                }
+            }
             '=' => {
                 if self.match_char('=') {
                     Token::EqualEqual
@@ -57,12 +65,27 @@ impl Lexer {
                     Token::Greater
                 }
             }
+            '&' => {
+                if self.match_char('&') {
+                    Token::And
+                } else {
+                    self.next_token() // ignora & sozinho
+                }
+            }
+            '|' => {
+                if self.match_char('|') {
+                    Token::Or
+                } else {
+                    self.next_token() // ignora | sozinho
+                }
+            }
             '(' => Token::LParen,
             ')' => Token::RParen,
             '{' => Token::LBrace,
             '}' => Token::RBrace,
             ',' => Token::Comma,
             ';' => Token::Semicolon,
+            '.' => Token::Dot,
             '"' => self.read_string(),
             ch if ch.is_ascii_digit() => self.read_number(ch),
             ch if Self::is_identifier_start(ch) => self.read_identifier(ch),
@@ -100,6 +123,15 @@ impl Lexer {
             } else {
                 break;
             }
+        }
+    }
+
+    fn skip_line_comment(&mut self) {
+        while let Some(&ch) = self.input.get(self.current) {
+            if ch == '\n' {
+                break;
+            }
+            self.current += 1;
         }
     }
 
@@ -152,6 +184,19 @@ impl Lexer {
             "return" => Token::Return,
             "use" => Token::Use,
             "export" => Token::Export,
+            "class" => Token::Class,
+            "new" => Token::New,
+            "this" => Token::This,
+            "public" => Token::Public,
+            "private" => Token::Private,
+            "protected" => Token::Protected,
+            "namespace" => Token::Namespace,
+            "try" => Token::Try,
+            "catch" => Token::Catch,
+            "throw" => Token::Throw,
+            "true" => Token::True,
+            "false" => Token::False,
+            "null" => Token::Null,
             _ => Token::Identifier(ident),
         }
     }

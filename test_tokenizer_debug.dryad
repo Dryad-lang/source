@@ -1,0 +1,3 @@
+// test_tokenizer_debug.dryad
+// Teste simples para verificar tokenização
+native_console_println("bar");

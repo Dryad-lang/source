@@ -1,0 +1,88 @@
+// test_advanced_features.dryad
+// Teste abrangente das funcionalidades avançadas da common lib
+
+native_console_println("=== Teste Avançado da Common Lib ===");
+
+// Teste 1: Combinação de tipos e conversões
+native_console_println("\n1. Testando conversões e comparações:");
+let num1 = 42;
+let num2 = 3.14;
+let str1 = "123";
+let str2 = "hello";
+
+native_console_println("num1:", num1, "tipo:", native_core_typeof(num1));
+native_console_println("num2:", num2, "tipo:", native_core_typeof(num2));
+native_console_println("str1:", str1, "tipo:", native_core_typeof(str1));
+native_console_println("str2:", str2, "tipo:", native_core_typeof(str2));
+
+// Conversões entre tipos
+let strFromNum = native_core_to_string(num1);
+let numFromStr = native_core_to_number(str1);
+let boolFromNum = native_core_to_bool(num1);
+
+native_console_println("toString(42):", strFromNum);
+native_console_println("toNumber('123'):", numFromStr);
+native_console_println("toBool(42):", boolFromNum);
+
+// Teste 2: Manipulação de arquivos com lógica
+native_console_println("\n2. Testando lógica de arquivos:");
+let fileName = "test_logic.txt";
+let content = "Conteúdo inicial";
+
+// Escrever arquivo
+native_fs_write_file(fileName, content);
+native_console_println("Arquivo criado:", fileName);
+
+// Verificar se existe antes de ler
+if (native_fs_file_exists(fileName)) {
+    let readContent = native_fs_read_file(fileName);
+    native_console_println("Conteúdo lido:", readContent);
+    
+    // Verificar se o conteúdo é o esperado
+    if (native_core_equals(readContent, content)) {
+        native_console_println("Conteúdo confere!");
+    } else {
+        native_console_println("Erro: conteúdo não confere");
+    }
+} else {
+    native_console_println("Erro: arquivo não existe");
+}
+
+// Teste 3: Buffers e manipulação de dados
+native_console_println("\n3. Testando buffers:");
+let buffer = native_buffer_create(100);
+let bufferSize = native_buffer_length(buffer);
+native_console_println("Buffer criado com tamanho:", bufferSize);
+
+// Teste 4: Reatribuição de variáveis
+native_console_println("\n4. Testando reatribuição:");
+let x = 10;
+native_console_println("x inicial:", x);
+x = 20;
+native_console_println("x após reatribuição:", x);
+x = native_core_to_string(x);
+native_console_println("x como string:", x, "tipo:", native_core_typeof(x));
+
+// Teste 5: Booleanos e lógica condicional
+native_console_println("\n5. Testando lógica booleana:");
+let isTrue = true;
+let isFalse = false;
+let isNull = null;
+
+native_console_println("true:", isTrue);
+native_console_println("false:", isFalse);
+native_console_println("null:", isNull);
+
+if (isTrue) {
+    native_console_println("Condição true funciona");
+}
+
+if (!isFalse) {
+    native_console_println("Condição !false funciona");
+}
+
+// Limpeza
+native_fs_delete_file(fileName);
+native_console_println("\nArquivo de teste removido");
+
+native_console_println("\n=== Teste Avançado Concluído ===");

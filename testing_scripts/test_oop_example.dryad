@@ -1,0 +1,39 @@
+// Exemplo básico de POO em Dryad
+
+class Pessoa {
+    public name;
+    private age;
+    
+    public fun init(name, age) {
+        this.name = name;
+        this.age = age;
+    }
+    
+    public fun greet() {
+        print("Olá, meu nome é " + this.name);
+    }
+    
+    public fun getAge() {
+        this.age;
+    }
+    
+    public fun setAge(newAge) {
+        this.age = newAge;
+    }
+}
+
+// Criar uma instância
+let pessoa = new Pessoa("Ana", 25);
+
+// Chamar métodos
+pessoa.greet();
+
+// Acessar campos públicos
+print("Nome: " + pessoa.name);
+
+// Usar métodos para acessar campos privados
+print("Idade: " + pessoa.getAge());
+
+// Modificar através de método
+pessoa.setAge(26);
+print("Nova idade: " + pessoa.getAge());
