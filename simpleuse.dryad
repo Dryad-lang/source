@@ -1,5 +1,5 @@
 // Simple use for Dryad
 // This module demonstrates how to use the console I/O module in Dryad
-use './simpleexport.dryad';
+use './simpleexport.dryad'; // Importing the simple export module
 
 printMessage("Hello from Dryad!");

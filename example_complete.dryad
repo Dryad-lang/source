@@ -7,31 +7,6 @@ print("=== Demonstração do Sistema Oak ===");
 using IO.console_simple;
 
 // 2. Import de arquivo local
-use './simpleexport.dryad';
+// use './simpleexport.dryad';
 
 print("1. Testando imports de namespace:");
-console_simple.println("  - println() do módulo IO.console_simple");
-console_simple.log("DEBUG", "Log message do módulo IO.console_simple");
-
-print("2. Testando imports de arquivo local:");
-printMessage("  - printMessage() do arquivo simpleexport.dryad");
-
-print("3. Funcionalidades estáticas funcionando:");
-
-// Definindo classe com métodos estáticos localmente
-class MathUtils {
-    static function square(x) {
-        return x * x;
-    }
-    
-    static function cube(x) {
-        return x * x * x;
-    }
-}
-
-let square = MathUtils.square(5);
-let cube = MathUtils.cube(3);
-print("  - 5² = " + square);
-print("  - 3³ = " + cube);
-
-print("=== Sistema Oak funcionando perfeitamente! ===");

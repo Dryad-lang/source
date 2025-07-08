@@ -2,13 +2,12 @@
 
 use std::fs;
 use std::path::Path;
-use std::collections::HashMap;
-use serde_json::{json, Value};
 use crate::lexer::tokenizer::Lexer;
 use crate::parser::parser::Parser;
 use crate::interpreter::{env::Env, evaluator::Evaluator};
 use crate::interpreter::errors::{DryadError, ErrorSeverity};
 use crate::cli::repl::ReplSession;
+use crate::oak::cli_integration::{OakCliIntegration, OakCommand};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ExecutionMode {
@@ -119,6 +118,7 @@ impl CliArgs {
 pub struct DryadCli {
     evaluator: Evaluator,
     args: Option<CliArgs>,
+    oak_cli: OakCliIntegration,
 }
 
 impl DryadCli {
@@ -126,6 +126,7 @@ impl DryadCli {
         Self {
             evaluator: Evaluator::new(),
             args: None,
+            oak_cli: OakCliIntegration::new(),
         }
     }
     
@@ -133,6 +134,7 @@ impl DryadCli {
         Self {
             evaluator: Evaluator::new(),
             args: Some(args),
+            oak_cli: OakCliIntegration::new(),
         }
     }
     
@@ -284,166 +286,64 @@ impl DryadCli {
     // Oak Package Manager Methods
 
     fn oak_init(&self) -> Result<(), DryadError> {
-        println!("Initializing Oak project...");
+        let command = OakCommand::Init { 
+            name: None, 
+            description: None 
+        };
         
-        // Check if oaklibs.json already exists
-        if Path::new("oaklibs.json").exists() {
-            return Err(DryadError::new(
-                "Oak project already initialized (oaklibs.json exists)".to_string(),
+        let result = self.oak_cli.execute_command(command);
+        
+        if result.success {
+            println!("{}", result.output);
+            Ok(())
+        } else {
+            Err(DryadError::new(
+                result.error.unwrap_or("Oak init failed".to_string()),
                 None,
                 ErrorSeverity::Error,
-            ));
+            ))
         }
-        
-        // Create default oaklibs.json
-        let default_config = json!({
-            "name": "my-dryad-project",
-            "version": "1.0.0",
-            "description": "A Dryad project using Oak package manager",
-            "dependencies": {},
-            "lib_paths": [
-                "./lib"
-            ]
-        });
-        
-        // Write oaklibs.json
-        let json_string = serde_json::to_string_pretty(&default_config)
-            .map_err(|e| DryadError::new(
-                format!("Failed to serialize config: {}", e),
-                None,
-                ErrorSeverity::Error,
-            ))?;
-        
-        fs::write("oaklibs.json", json_string)
-            .map_err(|e| DryadError::new(
-                format!("Failed to write oaklibs.json: {}", e),
-                None,
-                ErrorSeverity::Error,
-            ))?;
-        
-        // Create lib directory if it doesn't exist
-        if !Path::new("lib").exists() {
-            fs::create_dir("lib")
-                .map_err(|e| DryadError::new(
-                    format!("Failed to create lib directory: {}", e),
-                    None,
-                    ErrorSeverity::Error,
-                ))?;
-        }
-        
-        println!("✓ Created oaklibs.json");
-        println!("✓ Created lib/ directory");
-        println!("Oak project initialized successfully!");
-        
-        Ok(())
     }
 
     fn oak_add(&self, package: &str) -> Result<(), DryadError> {
-        println!("Adding package: {}", package);
+        let command = OakCommand::Add { 
+            package: package.to_string(), 
+            version: None, 
+            dev: false 
+        };
         
-        // Check if oaklibs.json exists
-        if !Path::new("oaklibs.json").exists() {
-            return Err(DryadError::new(
-                "No Oak project found. Run 'dryad oak init' first.".to_string(),
+        let result = self.oak_cli.execute_command(command);
+        
+        if result.success {
+            println!("{}", result.output);
+            Ok(())
+        } else {
+            Err(DryadError::new(
+                result.error.unwrap_or("Oak add failed".to_string()),
                 None,
                 ErrorSeverity::Error,
-            ));
+            ))
         }
-        
-        // Read oaklibs.json
-        let content = fs::read_to_string("oaklibs.json")
-            .map_err(|e| DryadError::new(
-                format!("Failed to read oaklibs.json: {}", e),
-                None,
-                ErrorSeverity::Error,
-            ))?;
-        
-        let mut config: Value = serde_json::from_str(&content)
-            .map_err(|e| DryadError::new(
-                format!("Failed to parse oaklibs.json: {}", e),
-                None,
-                ErrorSeverity::Error,
-            ))?;
-        
-        // Add package to dependencies (for now, just mark as latest version)
-        if let Some(deps) = config["dependencies"].as_object_mut() {
-            deps.insert(package.to_string(), json!("latest"));
-        }
-        
-        // Write back oaklibs.json
-        let json_string = serde_json::to_string_pretty(&config)
-            .map_err(|e| DryadError::new(
-                format!("Failed to serialize config: {}", e),
-                None,
-                ErrorSeverity::Error,
-            ))?;
-        
-        fs::write("oaklibs.json", json_string)
-            .map_err(|e| DryadError::new(
-                format!("Failed to write oaklibs.json: {}", e),
-                None,
-                ErrorSeverity::Error,
-            ))?;
-        
-        println!("✓ Added {} to dependencies", package);
-        println!("Package added successfully!");
-        
-        Ok(())
     }
 
     fn oak_list(&self) -> Result<(), DryadError> {
-        // Check if oaklibs.json exists
-        if !Path::new("oaklibs.json").exists() {
-            return Err(DryadError::new(
-                "No Oak project found. Run 'dryad oak init' first.".to_string(),
-                None,
-                ErrorSeverity::Error,
-            ));
-        }
+        let command = OakCommand::List { 
+            dev: false, 
+            production: true 
+        };
         
-        // Read oaklibs.json
-        let content = fs::read_to_string("oaklibs.json")
-            .map_err(|e| DryadError::new(
-                format!("Failed to read oaklibs.json: {}", e),
-                None,
-                ErrorSeverity::Error,
-            ))?;
+        let result = self.oak_cli.execute_command(command);
         
-        let config: Value = serde_json::from_str(&content)
-            .map_err(|e| DryadError::new(
-                format!("Failed to parse oaklibs.json: {}", e),
-                None,
-                ErrorSeverity::Error,
-            ))?;
-        
-        println!("Oak Project: {}", config["name"].as_str().unwrap_or("unknown"));
-        println!("Version: {}", config["version"].as_str().unwrap_or("unknown"));
-        println!();
-        
-        if let Some(deps) = config["dependencies"].as_object() {
-            if deps.is_empty() {
-                println!("No dependencies installed.");
-            } else {
-                println!("Dependencies:");
-                for (name, version) in deps {
-                    println!("  {} @ {}", name, version.as_str().unwrap_or("unknown"));
-                }
-            }
+        if result.success {
+            println!("{}", result.output);
+            Ok(())
         } else {
-            println!("No dependencies found.");
+            Err(DryadError::new(
+                result.error.unwrap_or("Oak list failed".to_string()),
+                None,
+                ErrorSeverity::Error,
+            ))
         }
-        
-        println!();
-        if let Some(paths) = config["lib_paths"].as_array() {
-            println!("Library paths:");
-            for path in paths {
-                if let Some(path_str) = path.as_str() {
-                    println!("  {}", path_str);
-                }
-            }
-        }
-        
-        Ok(())
     }
 }
 

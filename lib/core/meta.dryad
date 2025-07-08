@@ -1,145 +1,120 @@
 // lib/core/meta.dryad
-// Módulo de meta-programação e reflection para Dryad
+// Módulo de reflection e meta-programação para Dryad
 
-namespace core {
+namespace Core {
     export class Meta {
-        // Reflection básica
-        public fun getClassName(instance) {
-            return native_core_get_class_name(instance);
+        // Informações de classe
+        public static fun getClassName(obj) {
+            return native_meta_get_class_name(obj);
         }
         
-        public fun getClassMethods(classOrInstance) {
-            return native_core_get_class_methods(classOrInstance);
+        public static fun getClassMethods(obj) {
+            return native_meta_get_class_methods(obj);
         }
         
-        public fun getClassFields(classOrInstance) {
-            return native_core_get_class_fields(classOrInstance);
+        public static fun getClassFields(obj) {
+            return native_meta_get_class_fields(obj);
         }
         
-        public fun hasMethod(instance, methodName) {
-            return native_core_has_method(instance, methodName);
+        public static fun getClassStaticMethods(className) {
+            return native_meta_get_class_static_methods(className);
         }
         
-        public fun hasField(instance, fieldName) {
-            return native_core_has_field(instance, fieldName);
+        // Verificação de existência
+        public static fun hasMethod(obj, methodName) {
+            return native_meta_has_method(obj, methodName);
         }
         
-        public fun callMethod(instance, methodName, args) {
-            return native_core_call_method(instance, methodName, args);
+        public static fun hasField(obj, fieldName) {
+            return native_meta_has_field(obj, fieldName);
         }
         
-        public fun getField(instance, fieldName) {
-            return native_core_get_field(instance, fieldName);
+        public static fun hasStaticMethod(className, methodName) {
+            return native_meta_has_static_method(className, methodName);
         }
         
-        public fun setField(instance, fieldName, value) {
-            return native_core_set_field(instance, fieldName, value);
+        // Invocação dinâmica
+        public static fun invokeMethod(obj, methodName, args) {
+            return native_meta_invoke_method(obj, methodName, args);
         }
         
-        // Eval e execução dinâmica
-        public fun eval(code) {
-            return native_core_eval(code);
+        public static fun invokeStaticMethod(className, methodName, args) {
+            return native_meta_invoke_static_method(className, methodName, args);
         }
         
-        public fun evalFile(filename) {
-            return native_core_eval_file(filename);
+        // Acesso a campos
+        public static fun getField(obj, fieldName) {
+            return native_meta_get_field(obj, fieldName);
         }
         
-        public fun compile(code) {
-            return native_core_compile(code);
+        public static fun setField(obj, fieldName, value) {
+            return native_meta_set_field(obj, fieldName, value);
         }
         
-        // Análise de módulos
-        public fun getLoadedModules() {
-            return native_core_get_loaded_modules();
+        // Informações de tipo
+        public static fun getType(obj) {
+            return native_meta_get_type(obj);
         }
         
-        public fun getModuleInfo(moduleName) {
-            return native_core_get_module_info(moduleName);
+        public static fun getTypeInfo(obj) {
+            return native_meta_get_type_info(obj);
         }
         
-        public fun getModuleExports(moduleName) {
-            return native_core_get_module_exports(moduleName);
+        public static fun isInstanceOf(obj, className) {
+            return native_meta_is_instance_of(obj, className);
         }
         
-        public fun isModuleLoaded(moduleName) {
-            return native_core_is_module_loaded(moduleName);
+        // Avaliação dinâmica
+        public static fun eval(code) {
+            return native_meta_eval(code);
         }
         
-        public fun reloadModule(moduleName) {
-            return native_core_reload_module(moduleName);
+        public static fun evalExpression(expression) {
+            return native_meta_eval_expression(expression);
         }
         
-        public fun unloadModule(moduleName) {
-            return native_core_unload_module(moduleName);
+        // Informações de função
+        public static fun getFunctionName(func) {
+            return native_meta_get_function_name(func);
         }
         
-        // Análise de ambiente
-        public fun getEnvironmentVars() {
-            return native_core_get_environment_vars();
+        public static fun getFunctionParameters(func) {
+            return native_meta_get_function_parameters(func);
         }
         
-        public fun getCurrentScope() {
-            return native_core_get_current_scope();
+        public static fun getFunctionArity(func) {
+            return native_meta_get_function_arity(func);
         }
         
-        public fun getGlobalScope() {
-            return native_core_get_global_scope();
+        // Criação dinâmica
+        public static fun createInstance(className, args) {
+            return native_meta_create_instance(className, args);
         }
         
-        public fun getAllVariables() {
-            return native_core_get_all_variables();
+        public static fun createClass(definition) {
+            return native_meta_create_class(definition);
         }
         
-        // Debugging e profiling
-        public fun getStackTrace() {
-            return native_core_get_stack_trace();
+        // Serialização e deserialização
+        public static fun serialize(obj) {
+            return native_meta_serialize(obj);
         }
         
-        public fun getCallStack() {
-            return native_core_get_call_stack();
+        public static fun deserialize(data) {
+            return native_meta_deserialize(data);
         }
         
-        public fun getMemoryUsage() {
-            return native_core_get_memory_usage();
+        // Informações do ambiente
+        public static fun getGlobalVariables() {
+            return native_meta_get_global_variables();
         }
         
-        public fun getPerformanceInfo() {
-            return native_core_get_performance_info();
+        public static fun getLoadedClasses() {
+            return native_meta_get_loaded_classes();
         }
         
-        // Utilitários avançados
-        public fun cloneObject(obj) {
-            return native_core_clone_object(obj);
-        }
-        
-        public fun deepClone(obj) {
-            return native_core_deep_clone(obj);
-        }
-        
-        public fun serialize(obj) {
-            return native_core_serialize(obj);
-        }
-        
-        public fun deserialize(data) {
-            return native_core_deserialize(data);
-        }
-        
-        // Aliases para compatibilidade
-        public fun reflect(obj) {
-            return {
-                className: this.getClassName(obj),
-                methods: this.getClassMethods(obj),
-                fields: this.getClassFields(obj)
-            };
-        }
-        
-        public fun execute(code) {
-            return this.eval(code);
-        }
-        
-        public fun introspect(obj) {
-            return this.reflect(obj);
+        public static fun getLoadedNamespaces() {
+            return native_meta_get_loaded_namespaces();
         }
     }
 }

@@ -1,11 +1,45 @@
 {
-  "dependencies": {
-    "math-utils": "latest"
-  },
-  "description": "A Dryad project using Oak package manager",
-  "lib_paths": [
-    "./lib"
-  ],
   "name": "my-dryad-project",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "description": "A comprehensive Dryad project using Oak package manager",
+  "author": "Dryad Developer",
+  "license": "MIT",
+  "homepage": "https://github.com/user/my-dryad-project",
+  "repository": "https://github.com/user/my-dryad-project.git",
+  "keywords": ["dryad", "oak", "programming", "language"],
+  "dependencies": {
+    "math-utils": {
+      "version": "1.2.0",
+      "source": {"Registry": "https://registry.dryad-lang.org"},
+      "optional": false,
+      "dev": false
+    },
+    "json-parser": {
+      "version": "latest",
+      "source": {"Registry": "https://registry.dryad-lang.org"},
+      "optional": false,
+      "dev": false
+    }
+  },
+  "dev_dependencies": {
+    "test-framework": {
+      "version": "1.0.0",
+      "source": {"Registry": "https://registry.dryad-lang.org"},
+      "optional": false,
+      "dev": true
+    }
+  },
+  "lib_paths": [
+    "./lib",
+    "./node_modules",
+    "./custom/libraries"
+  ],
+  "scripts": {
+    "test": "dryad tests/runner.dryad",
+    "build": "dryad build.dryad",
+    "start": "dryad src/main.dryad",
+    "dev": "dryad --verbose src/main.dryad",
+    "lint": "dryad --strict src/**/*.dryad"
+  },
+  "oak_version": "1.0.0"
 }
