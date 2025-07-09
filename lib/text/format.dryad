@@ -1,0 +1,426 @@
+// lib/text/format.dryad
+// Módulo para formatação avançada de texto
+
+namespace Text {
+    export class Format {
+        
+        // ===== FORMATAÇÃO DE NÚMEROS =====
+        
+        // Formatar número com separadores de milhares
+        public static fun formatNumber(number, separator) {
+            let sep = separator;
+            if (!sep) {
+                sep = ",";
+            }
+            
+            let numStr = "" + number;
+            let parts = String.split(numStr, ".");
+            let integerPart = parts[0];
+            let decimalPart = "";
+            
+            if (native_array_length(parts) > 1) {
+                decimalPart = "." + parts[1];
+            }
+            
+            // Adicionar separadores de milhares
+            let result = "";
+            let len = String.length(integerPart);
+            let count = 0;
+            
+            // Processar de trás para frente
+            let i = len - 1;
+            while (i >= 0) {
+                if (count > 0 && count % 3 == 0) {
+                    result = sep + result;
+                }
+                result = String.charAt(integerPart, i) + result;
+                count = count + 1;
+                i = i - 1;
+            }
+            
+            return result + decimalPart;
+        }
+        
+        // Formatar moeda brasileira
+        public static fun formatCurrency(amount, symbol) {
+            let currencySymbol = symbol;
+            if (!currencySymbol) {
+                currencySymbol = "R$";
+            }
+            
+            let formatted = Format.formatNumber(amount, ".");
+            return currencySymbol + " " + formatted;
+        }
+        
+        // Formatar porcentagem
+        public static fun formatPercentage(value, decimals) {
+            let decimalPlaces = decimals;
+            if (!decimalPlaces) {
+                decimalPlaces = 2;
+            }
+            
+            let percentage = value * 100;
+            let rounded = Format.roundToDecimals(percentage, decimalPlaces);
+            return rounded + "%";
+        }
+        
+        // Arredondar para número específico de decimais
+        public static fun roundToDecimals(number, decimals) {
+            let multiplier = Math.pow(10, decimals);
+            let rounded = Math.round(number * multiplier) / multiplier;
+            return rounded;
+        }
+        
+        // ===== FORMATAÇÃO DE TEXTO =====
+        
+        // Capitalizar primeira letra
+        public static fun capitalize(text) {
+            if (String.isEmpty(text)) {
+                return text;
+            }
+            
+            let firstChar = String.slice(text, 0, 1);
+            let restOfText = String.slice(text, 1);
+            return String.toUpperCase(firstChar) + String.toLowerCase(restOfText);
+        }
+        
+        // Capitalizar cada palavra (Title Case)
+        public static fun titleCase(text) {
+            let words = String.split(text, " ");
+            let result = [];
+            
+            let wordsLength = native_array_length(words);
+            let i = 0;
+            while (i < wordsLength) {
+                let word = native_array_get(words, i);
+                let capitalizedWord = Format.capitalize(word);
+                native_array_push(result, capitalizedWord);
+                i = i + 1;
+            }
+            
+            return String.join(result, " ");
+        }
+        
+        // Converter para camelCase
+        public static fun camelCase(text) {
+            let words = String.split(text, " ");
+            if (native_array_length(words) == 0) {
+                return text;
+            }
+            
+            let firstWord = native_array_get(words, 0);
+            let result = String.toLowerCase(firstWord);
+            
+            let i = 1;
+            while (i < native_array_length(words)) {
+                let word = native_array_get(words, i);
+                result = result + Format.capitalize(word);
+                i = i + 1;
+            }
+            
+            return result;
+        }
+        
+        // Converter para PascalCase
+        public static fun pascalCase(text) {
+            let words = String.split(text, " ");
+            let result = "";
+            
+            let i = 0;
+            while (i < native_array_length(words)) {
+                let word = native_array_get(words, i);
+                result = result + Format.capitalize(word);
+                i = i + 1;
+            }
+            
+            return result;
+        }
+        
+        // Converter para snake_case
+        public static fun snakeCase(text) {
+            let words = String.split(text, " ");
+            let result = [];
+            
+            let i = 0;
+            while (i < native_array_length(words)) {
+                let word = native_array_get(words, i);
+                native_array_push(result, String.toLowerCase(word));
+                i = i + 1;
+            }
+            
+            return String.join(result, "_");
+        }
+        
+        // Converter para kebab-case
+        public static fun kebabCase(text) {
+            let words = String.split(text, " ");
+            let result = [];
+            
+            let i = 0;
+            while (i < native_array_length(words)) {
+                let word = native_array_get(words, i);
+                native_array_push(result, String.toLowerCase(word));
+                i = i + 1;
+            }
+            
+            return String.join(result, "-");
+        }
+        
+        // ===== FORMATAÇÃO DE DADOS =====
+        
+        // Formatar data (DD/MM/YYYY)
+        public static fun formatDate(date, format) {
+            let dateFormat = format;
+            if (!dateFormat) {
+                dateFormat = "DD/MM/YYYY";
+            }
+            
+            return native_date_format(date, dateFormat);
+        }
+        
+        // Formatar hora (HH:MM:SS)
+        public static fun formatTime(time, format) {
+            let timeFormat = format;
+            if (!timeFormat) {
+                timeFormat = "HH:MM:SS";
+            }
+            
+            return native_time_format(time, timeFormat);
+        }
+        
+        // Formatar data e hora
+        public static fun formatDateTime(datetime, format) {
+            let dateTimeFormat = format;
+            if (!dateTimeFormat) {
+                dateTimeFormat = "DD/MM/YYYY HH:MM:SS";
+            }
+            
+            return native_datetime_format(datetime, dateTimeFormat);
+        }
+        
+        // ===== FORMATAÇÃO DE TAMANHOS =====
+        
+        // Formatar bytes para formato legível
+        public static fun formatBytes(bytes, decimals) {
+            let decimalPlaces = decimals;
+            if (!decimalPlaces) {
+                decimalPlaces = 2;
+            }
+            
+            if (bytes == 0) {
+                return "0 Bytes";
+            }
+            
+            let k = 1024;
+            let sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB"];
+            let i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            let value = bytes / Math.pow(k, i);
+            let rounded = Format.roundToDecimals(value, decimalPlaces);
+            let unit = native_array_get(sizes, i);
+            
+            return rounded + " " + unit;
+        }
+        
+        // ===== TEMPLATES E INTERPOLAÇÃO =====
+        
+        // Template simples com placeholders
+        public static fun template(templateStr, variables) {
+            let result = templateStr;
+            let keys = native_object_keys(variables);
+            let keysLength = native_array_length(keys);
+            
+            let i = 0;
+            while (i < keysLength) {
+                let key = native_array_get(keys, i);
+                let value = native_object_get(variables, key);
+                let placeholder = "{" + key + "}";
+                result = String.replaceAll(result, placeholder, value);
+                i = i + 1;
+            }
+            
+            return result;
+        }
+        
+        // Interpolação de string com ${}
+        public static fun interpolate(templateStr, variables) {
+            let result = templateStr;
+            let keys = native_object_keys(variables);
+            let keysLength = native_array_length(keys);
+            
+            let i = 0;
+            while (i < keysLength) {
+                let key = native_array_get(keys, i);
+                let value = native_object_get(variables, key);
+                let placeholder = "${" + key + "}";
+                result = String.replaceAll(result, placeholder, value);
+                i = i + 1;
+            }
+            
+            return result;
+        }
+        
+        // ===== UTILITÁRIOS DE FORMATAÇÃO =====
+        
+        // Truncar texto com ellipsis
+        public static fun truncate(text, maxLength, ellipsis) {
+            let suffix = ellipsis;
+            if (!suffix) {
+                suffix = "...";
+            }
+            
+            if (String.length(text) <= maxLength) {
+                return text;
+            }
+            
+            let truncated = String.slice(text, 0, maxLength - String.length(suffix));
+            return truncated + suffix;
+        }
+        
+        // Preencher string à esquerda
+        public static fun padLeft(text, totalLength, padChar) {
+            let char = padChar;
+            if (!char) {
+                char = " ";
+            }
+            
+            let currentLength = String.length(text);
+            if (currentLength >= totalLength) {
+                return text;
+            }
+            
+            let padLength = totalLength - currentLength;
+            let padding = String.repeat(char, padLength);
+            return padding + text;
+        }
+        
+        // Preencher string à direita
+        public static fun padRight(text, totalLength, padChar) {
+            let char = padChar;
+            if (!char) {
+                char = " ";
+            }
+            
+            let currentLength = String.length(text);
+            if (currentLength >= totalLength) {
+                return text;
+            }
+            
+            let padLength = totalLength - currentLength;
+            let padding = String.repeat(char, padLength);
+            return text + padding;
+        }
+        
+        // Centralizar texto
+        public static fun center(text, totalLength, padChar) {
+            let char = padChar;
+            if (!char) {
+                char = " ";
+            }
+            
+            let currentLength = String.length(text);
+            if (currentLength >= totalLength) {
+                return text;
+            }
+            
+            let totalPadding = totalLength - currentLength;
+            let leftPadding = Math.floor(totalPadding / 2);
+            let rightPadding = totalPadding - leftPadding;
+            
+            let leftPad = String.repeat(char, leftPadding);
+            let rightPad = String.repeat(char, rightPadding);
+            
+            return leftPad + text + rightPad;
+        }
+        
+        // ===== FORMATAÇÃO DE LISTAS =====
+        
+        // Formatar lista com separadores
+        public static fun formatList(items, separator, lastSeparator) {
+            let sep = separator;
+            if (!sep) {
+                sep = ", ";
+            }
+            
+            let itemsLength = native_array_length(items);
+            if (itemsLength == 0) {
+                return "";
+            }
+            
+            if (itemsLength == 1) {
+                return native_array_get(items, 0);
+            }
+            
+            if (itemsLength == 2) {
+                let first = native_array_get(items, 0);
+                let second = native_array_get(items, 1);
+                let finalSep = lastSeparator;
+                if (!finalSep) {
+                    finalSep = sep;
+                }
+                return first + finalSep + second;
+            }
+            
+            let result = "";
+            let i = 0;
+            while (i < itemsLength - 1) {
+                let item = native_array_get(items, i);
+                result = result + item + sep;
+                i = i + 1;
+            }
+            
+            let lastItem = native_array_get(items, itemsLength - 1);
+            let finalSep = lastSeparator;
+            if (!finalSep) {
+                finalSep = sep;
+            }
+            
+            // Remover último separador e adicionar separador final
+            result = String.slice(result, 0, String.length(result) - String.length(sep));
+            result = result + finalSep + lastItem;
+            
+            return result;
+        }
+        
+        // Formatar lista com "e" no final
+        public static fun formatListWithAnd(items) {
+            return Format.formatList(items, ", ", " e ");
+        }
+        
+        // Formatar lista com "ou" no final
+        public static fun formatListWithOr(items) {
+            return Format.formatList(items, ", ", " ou ");
+        }
+        
+        // ===== FORMATAÇÃO DE TABELAS =====
+        
+        // Criar linha de tabela
+        public static fun createTableRow(cells, separator) {
+            let sep = separator;
+            if (!sep) {
+                sep = " | ";
+            }
+            
+            return String.join(cells, sep);
+        }
+        
+        // Criar separador de tabela
+        public static fun createTableSeparator(columnWidths, separator) {
+            let sep = separator;
+            if (!sep) {
+                sep = "-+-";
+            }
+            
+            let separators = [];
+            let i = 0;
+            while (i < native_array_length(columnWidths)) {
+                let width = native_array_get(columnWidths, i);
+                let line = String.repeat("-", width);
+                native_array_push(separators, line);
+                i = i + 1;
+            }
+            
+            return String.join(separators, sep);
+        }
+    }
+}

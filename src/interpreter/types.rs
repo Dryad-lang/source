@@ -296,6 +296,10 @@ impl TypeChecker {
                 }
                 None
             }
+            Expr::Assign { name: _, value } => {
+                // Verificar a expressão do valor
+                self.check_expression(value, env)
+            }
         }
     }
 
@@ -374,6 +378,10 @@ impl TypeChecker {
             }
             Expr::New { class: _, args: _ } => {
                 Some(Type::Instance)
+            }
+            Expr::Assign { name: _, value } => {
+                // O tipo da atribuição é o tipo do valor atribuído
+                self.infer_expression_type(value, env)
             }
         }
     }

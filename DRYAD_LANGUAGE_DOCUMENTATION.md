@@ -699,6 +699,169 @@ let user = Platform.getCurrentUser();      // Usuário atual
 let uptime = Platform.getUptime();         // Tempo ligado
 ```
 
+### Text.String - Operações com Strings
+
+```dryad
+using Text.String;
+
+// Operações básicas
+let text = "  Hello World  ";
+let length = String.length(text);          // 15
+let trimmed = String.trim(text);           // "Hello World"
+let upper = String.toUpperCase(trimmed);   // "HELLO WORLD"
+
+// Verificações
+let empty = String.isEmpty("");            // true
+let contains = String.contains(text, "Hello"); // true
+let starts = String.startsWith(text, "  Hello"); // true
+
+// Manipulação
+let slice = String.slice(text, 2, 7);      // "Hello"
+let parts = String.split(trimmed, " ");    // ["Hello", "World"]
+let repeated = String.repeat("*", 5);      // "*****"
+let reversed = String.reverse("hello");    // "olleh"
+
+// Formatação
+let capitalized = String.capitalize("hello"); // "Hello"
+let padded = String.pad("42", 5, "0");     // "00042"
+```
+
+### Text.JSON - Processamento JSON
+
+```dryad
+using Text.JSON;
+
+// Parse e stringify básico
+let data = { name: "João", age: 30, skills: ["JS", "Dryad"] };
+let jsonString = JSON.stringify(data);
+let parsed = JSON.parse(jsonString);
+
+// Formatação
+let pretty = JSON.prettyStringify(data, 2);
+let compact = JSON.compactStringify(data);
+
+// Validação
+let isValid = JSON.isValid(jsonString);    // true
+let result = JSON.tryParse(badJson);       // { success: false, error: "..." }
+
+// Manipulação avançada
+let name = JSON.getValueByPath(data, "name");
+JSON.setValueByPath(data, "city", "São Paulo");
+let merged = JSON.merge(obj1, obj2);
+let cloned = JSON.clone(data);
+
+// Conversões
+let queryStr = JSON.toQueryString(data);   // "name=João&age=30"
+let fromQuery = JSON.fromQueryString(queryStr);
+```
+
+### Text.XML - Processamento XML
+
+```dryad
+using Text.XML;
+
+// Parse e stringify
+let xmlStr = "<user id='123'><name>Maria</name></user>";
+let xmlObj = XML.parse(xmlStr);
+let backToString = XML.stringify(xmlObj);
+
+// Validação
+let isValid = XML.isValid(xmlStr);         // true
+let result = XML.tryParse(badXml);
+
+// Criação de elementos
+let element = XML.createElement("user", "João", {id: "456"});
+let empty = XML.createEmptyElement("br");
+let declaration = XML.createDeclaration("1.0", "UTF-8");
+
+// Manipulação
+let escaped = XML.escapeText("Hello <world> & \"friends\"!");
+let unescaped = XML.unescapeText("&lt;tag&gt;");
+let text = XML.extractText(element);
+let attrs = XML.extractAttributes(element);
+
+// Busca
+let user = XML.findElement(xmlObj, "user");
+let allUsers = XML.findAllElements(xmlObj, "user");
+
+// Conversões
+let jsonFromXml = XML.toJSON(xmlStr);
+let xmlFromJson = XML.fromJSON(jsonObj, "root");
+```
+
+### Text.RegExp - Expressões Regulares
+
+```dryad
+using Text.RegExp;
+
+// Operações básicas
+let pattern = "\\d+";
+let text = "Tenho 25 anos";
+let matches = RegExp.test(pattern, text);  // true
+let found = RegExp.match(pattern, text);   // ["25"]
+let all = RegExp.matchAll(pattern, text);
+
+// Substituições
+let replaced = RegExp.replace("\\d+", text, "XX");
+let allReplaced = RegExp.replaceAll("\\d", text, "X");
+
+// Validações prontas
+let isEmail = RegExp.isEmail("test@example.com");     // true
+let isURL = RegExp.isURL("https://example.com");      // true
+let isPhone = RegExp.isPhoneBR("11987654321");        // true
+let isCPF = RegExp.isCPF("123.456.789-00");          // true
+let isIP = RegExp.isIPv4("192.168.1.1");             // true
+
+// Extrações
+let emails = RegExp.extractEmails(longText);
+let urls = RegExp.extractURLs(content);
+let numbers = RegExp.extractNumbers("Price: $29.99");
+
+// Formatações
+let formattedCPF = RegExp.formatCPF("12345678900");   // "123.456.789-00"
+let formattedPhone = RegExp.formatPhoneBR("11987654321"); // "(11) 98765-4321"
+
+// Limpeza
+let clean = RegExp.removeHTMLTags("<p>Hello</p>");    // "Hello"
+let normalized = RegExp.normalizeSpaces("a   b   c"); // "a b c"
+```
+
+### Text.Format - Formatação Avançada
+
+```dryad
+using Text.Format;
+
+// Formatação de números
+let amount = 1234.56;
+let formatted = Format.formatNumber(amount);          // "1,234.56"
+let currency = Format.formatCurrency(amount);         // "R$ 1,234.56"
+let percentage = Format.formatPercentage(0.1234);     // "12.34%"
+let bytes = Format.formatBytes(1048576);              // "1.00 MB"
+
+// Formatação de texto
+let name = "joão silva santos";
+let title = Format.titleCase(name);                   // "João Silva Santos"
+let camel = Format.camelCase(name);                   // "joãoSilvaSantos"
+let snake = Format.snakeCase(name);                   // "joão_silva_santos"
+let pascal = Format.pascalCase(name);                 // "JoãoSilvaSantos"
+let kebab = Format.kebabCase(name);                   // "joão-silva-santos"
+
+// Templates
+let template = "Olá {name}, você tem {age} anos.";
+let vars = { name: "Ana", age: "25" };
+let result = Format.template(template, vars);         // "Olá Ana, você tem 25 anos."
+
+// Utilidades
+let truncated = Format.truncate(longText, 50);        // "Very long text that needs to be trun..."
+let padded = Format.padLeft("42", 5, "0");           // "00042"
+let centered = Format.center("Title", 20, "-");       // "-------Title--------"
+
+// Listas
+let items = ["maçã", "banana", "uva"];
+let list = Format.formatListWithAnd(items);           // "maçã, banana e uva"
+let orList = Format.formatListWithOr(items);          // "maçã, banana ou uva"
+```
+
 ---
 
 ## 🔌 APIs Externas

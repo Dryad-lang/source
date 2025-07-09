@@ -158,14 +158,17 @@ impl Evaluator {
             Stmt::For { init, cond, post, body } => {
                 let mut result = EvaluationResult::new(None);
                 
+                // Criar um novo escopo para o loop for
+                let mut loop_env = env.clone();
+                
                 if let Some(init_stmt) = init {
-                    let init_result = self.eval_stmt(init_stmt, env);
+                    let init_result = self.eval_stmt(init_stmt, &mut loop_env);
                     result.errors.extend(init_result.errors);
                 }
 
                 loop {
                     let should_continue = if let Some(cond_expr) = cond {
-                        let cond_result = self.eval_expr(cond_expr, env);
+                        let cond_result = self.eval_expr(cond_expr, &mut loop_env);
                         result.errors.extend(cond_result.errors);
                         
                         if let Some(val) = cond_result.value {
@@ -181,11 +184,11 @@ impl Evaluator {
                         break;
                     }
 
-                    let body_result = self.eval_stmt(body, env);
+                    let body_result = self.eval_stmt(body, &mut loop_env);
                     result.errors.extend(body_result.errors);
                     
                     if let Some(post_expr) = post {
-                        let post_result = self.eval_expr(post_expr, env);
+                        let post_result = self.eval_expr(post_expr, &mut loop_env);
                         result.errors.extend(post_result.errors);
                     }
                 }
@@ -372,17 +375,30 @@ impl Evaluator {
                         // Import all exported items from the module
                         let exported_items = module_env.get_all_exported();
                         for (name, value) in &exported_items {
-                            let full_name = if let Some(alias_name) = alias {
-                                format!("{}.{}", alias_name, name)
+                            let import_name = if let Some(alias_name) = alias {
+                                format!("{}.{}", alias_name, name.split('.').last().unwrap_or(name))
                             } else {
-                                let parts: Vec<&str> = module_path.split('.').collect();
-                                if let Some(last_part) = parts.last() {
-                                    format!("{}.{}", last_part, name)
-                                } else {
-                                    name.clone()
-                                }
+                                name.clone()
                             };
-                            env.set(full_name, value.clone());
+                            env.set(import_name, value.clone());
+                        }
+                        
+                        // Import namespace items directly (for classes like Text.JSON)
+                        let all_variables = module_env.get_all_variables();
+                        for (var_name, var_value) in &all_variables {
+                            if var_name.contains('.') {
+                                // Import full namespace path (e.g., Text.JSON)
+                                env.set(var_name.clone(), var_value.clone());
+                                
+                                // Also import just the class name if no alias specified
+                                if alias.is_none() {
+                                    let parts: Vec<&str> = var_name.split('.').collect();
+                                    if parts.len() >= 2 {
+                                        let class_name = parts.last().unwrap();
+                                        env.set(class_name.to_string(), var_value.clone());
+                                    }
+                                }
+                            }
                         }
                     }
                     Err(_) => {
@@ -829,14 +845,95 @@ impl Evaluator {
                 }
             }
             
+            Expr::Assign { name, value } => {
+                let val_result = self.eval_expr(value, env);
+                if !val_result.errors.is_empty() {
+                    return val_result;
+                }
+                
+                if let Some(val) = val_result.value {
+                    env.set(name.clone(), val.clone());
+                    EvaluationResult::new(Some(val))
+                } else {
+                    EvaluationResult::new(Some(Value::Null))
+                }
+            }
+            
             // ...existing code...
         }
     }
     
     fn eval_function_call(&mut self, function: &str, args: &[Expr], env: &mut Env) -> EvaluationResult {
-        // Primeiro verificar se é um método chamado em um objeto (obj.method)
+        // Verificar se é uma chamada com pontos (obj.method ou namespace.class.method)
         if function.contains('.') {
             let parts: Vec<&str> = function.split('.').collect();
+            
+            // Caso de 3 partes: namespace.class.method
+            if parts.len() == 3 {
+                let namespace_name = parts[0];
+                let class_name = parts[1];
+                let method_name = parts[2];
+                
+                // Tentar buscar a classe no namespace
+                let full_class_name = format!("{}.{}", namespace_name, class_name);
+                if let Some(class_value) = env.get(&full_class_name) {
+                    if let Value::Class(class_ref) = class_value {
+                        if let Some(static_method) = class_ref.get_static_method(method_name) {
+                            // Avaliar argumentos
+                            let mut arg_values = Vec::new();
+                            for arg in args {
+                                let arg_result = self.eval_expr(arg, env);
+                                if !arg_result.errors.is_empty() {
+                                    return arg_result;
+                                }
+                                if let Some(val) = arg_result.value {
+                                    arg_values.push(val);
+                                }
+                            }
+                            
+                            // Chamar método estático
+                            if let Value::Function { params, body, is_static, .. } = static_method {
+                                if !is_static {
+                                    let error = DryadError::new(
+                                        format!("Método '{}' não é estático", method_name),
+                                        Some((0, 0)),
+                                        ErrorSeverity::Error,
+                                    );
+                                    return EvaluationResult::with_error(error);
+                                }
+                                
+                                let mut method_env = Env::new(); // Sem this binding
+                                
+                                // Bind parâmetros
+                                for (i, param) in params.iter().enumerate() {
+                                    if let Some(arg_val) = arg_values.get(i) {
+                                        method_env.set(param.clone(), arg_val.clone());
+                                    }
+                                }
+                                
+                                // Executar corpo do método
+                                return self.eval_stmt(&body, &mut method_env);
+                            }
+                        }
+                        
+                        let error = DryadError::new(
+                            format!("Método estático '{}' não encontrado na classe '{}.{}'", method_name, namespace_name, class_name),
+                            Some((0, 0)),
+                            ErrorSeverity::Error,
+                        );
+                        return EvaluationResult::with_error(error);
+                    }
+                }
+                
+                let error = DryadError::new(
+                    format!("Classe '{}.{}' não encontrada", namespace_name, class_name),
+                    Some((0, 0)),
+                    ErrorSeverity::Error,
+                );
+                return EvaluationResult::with_error(error);
+            }
+            
+            // Caso de 2 partes: obj.method
             if parts.len() == 2 {
                 let obj_name = parts[0];
                 let method_name = parts[1];

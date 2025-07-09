@@ -1,0 +1,161 @@
+// examples/text_demo_simple.dryad
+// Demonstração simples dos módulos de texto (sem imports)
+
+fun main() {
+    print("=== Demonstração dos Módulos de Texto ===");
+    print("");
+    
+    // ===== Operações básicas com strings =====
+    print("--- Operações com Strings ---");
+    let text = "  Hello, Dryad World!  ";
+    print("Original: '" + text + "'");
+    
+    // Simular operações de string básicas
+    let trimmed = "Hello, Dryad World!";
+    print("Trimmed: '" + trimmed + "'");
+    
+    let upperText = "HELLO, DRYAD WORLD!";
+    print("Uppercase: " + upperText);
+    
+    // Verificar se contém substring (simulado)
+    let containsDryad = true;
+    print("Contains 'Dryad': " + containsDryad);
+    print("");
+    
+    // ===== Formatação de dados =====
+    print("--- Formatação de Dados ---");
+    let amount = 1234.56;
+    print("Amount: " + amount);
+    
+    // Simulação de formatação de moeda
+    let formattedCurrency = "R$ 1.234,56";
+    print("Currency: " + formattedCurrency);
+    
+    // Simulação de formatação de porcentagem
+    let percentage = "12,34%";
+    print("Percentage: " + percentage);
+    print("");
+    
+    // ===== Validação de dados =====
+    print("--- Validação de Dados ---");
+    let email = "contato@example.com";
+    print("Email: " + email);
+    
+    // Simulação de validação de email
+    let isValidEmail = true;
+    print("Is valid email: " + isValidEmail);
+    
+    let phone = "11987654321";
+    print("Phone: " + phone);
+    
+    // Simulação de formatação de telefone
+    let formattedPhone = "(11) 98765-4321";
+    print("Formatted phone: " + formattedPhone);
+    print("");
+    
+    // ===== Formatação de texto =====
+    print("--- Formatação de Texto ---");
+    let name = "joão silva santos";
+    print("Name: " + name);
+    
+    // Simulação de diferentes formatações
+    let titleCase = "João Silva Santos";
+    print("Title case: " + titleCase);
+    
+    let camelCase = "joãoSilvaSantos";
+    print("Camel case: " + camelCase);
+    
+    let snakeCase = "joão_silva_santos";
+    print("Snake case: " + snakeCase);
+    
+    let pascalCase = "JoãoSilvaSantos";
+    print("Pascal case: " + pascalCase);
+    print("");
+    
+    // ===== Trabalho com JSON =====
+    print("--- Dados JSON ---");
+    let jsonString = "{\"name\":\"João Silva\",\"age\":30,\"city\":\"São Paulo\"}";
+    print("JSON String: " + jsonString);
+    
+    // Demonstração de estrutura JSON formatada
+    print("Pretty JSON:");
+    print("{");
+    print("  \"name\": \"João Silva\",");
+    print("  \"age\": 30,");
+    print("  \"city\": \"São Paulo\",");
+    print("  \"skills\": [\"JavaScript\", \"Dryad\", \"Python\"]");
+    print("}");
+    print("");
+    
+    // ===== Trabalho com XML =====
+    print("--- Dados XML ---");
+    let xmlData = "<user id=\"123\"><name>Maria</name><email>maria@test.com</email></user>";
+    print("XML: " + xmlData);
+    
+    // Simulação de XML bem formatado
+    print("Formatted XML:");
+    print("<user id=\"456\" active=\"true\">");
+    print("  <name>Maria Silva</name>");
+    print("  <email>maria@test.com</email>");
+    print("  <phone>(11) 99999-8888</phone>");
+    print("</user>");
+    print("");
+    
+    // ===== Templates e relatórios =====
+    print("--- Templates e Relatórios ---");
+    let template = "Olá {name}, você tem {age} anos e mora em {city}.";
+    print("Template: " + template);
+    
+    let result = "Olá Ana, você tem 25 anos e mora em Rio de Janeiro.";
+    print("Result: " + result);
+    print("");
+    
+    // ===== Demonstração de integração =====
+    print("--- Integração e Processamento ---");
+    
+    // Simulação de processamento de dados
+    print("Processando dados do usuário...");
+    
+    let userData = "Pedro Oliveira";
+    print("Name (formatted): " + userData);
+    
+    let userEmail = "pedro@test.com";
+    print("Email (validated): " + userEmail);
+    
+    let userPhone = "(11) 99988-7766";
+    print("Phone (formatted): " + userPhone);
+    
+    let userSalary = "R$ 5.500,75";
+    print("Salary (formatted): " + userSalary);
+    print("");
+    
+    // Relatório final
+    print("--- Relatório Final ---");
+    print("User Report:");
+    print("{");
+    print("  \"user\": \"Pedro Oliveira\",");
+    print("  \"contact\": {");
+    print("    \"email\": \"pedro@test.com\",");
+    print("    \"phone\": \"(11) 99988-7766\"");
+    print("  },");
+    print("  \"salary\": \"R$ 5.500,75\",");
+    print("  \"generated_at\": \"2023-12-25T10:30:00Z\"");
+    print("}");
+    print("");
+    
+    print("=== Demonstração concluída! ===");
+    print("");
+    print("NOTA: Esta demonstração mostra a estrutura e funcionalidades");
+    print("dos módulos de texto. Para usar as funções reais, importe");
+    print("os módulos apropriados quando o sistema de imports estiver");
+    print("totalmente implementado:");
+    print("");
+    print("import { String } from \"text.string\";");
+    print("import { JSON } from \"text.json\";");
+    print("import { XML } from \"text.xml\";");
+    print("import { RegExp } from \"text.regexp\";");
+    print("import { Format } from \"text.format\";");
+}
+
+// Executar demonstração
+main();

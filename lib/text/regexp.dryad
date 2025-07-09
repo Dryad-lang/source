@@ -1,0 +1,336 @@
+// lib/text/regexp.dryad
+// Módulo para operações com expressões regulares
+
+namespace Text {
+    export class RegExp {
+        
+        // ===== FUNÇÕES NATIVAS (necessárias para regex) =====
+        
+        // Testar se string corresponde ao padrão
+        public static fun test(pattern, text, flags) {
+            if (flags) {
+                return native_regex_test(pattern, text, flags);
+            } else {
+                return native_regex_test(pattern, text);
+            }
+        }
+        
+        // Encontrar primeira correspondência
+        public static fun match(pattern, text, flags) {
+            if (flags) {
+                return native_regex_match(pattern, text, flags);
+            } else {
+                return native_regex_match(pattern, text);
+            }
+        }
+        
+        // Encontrar todas as correspondências
+        public static fun matchAll(pattern, text, flags) {
+            if (flags) {
+                return native_regex_match_all(pattern, text, flags);
+            } else {
+                return native_regex_match_all(pattern, text);
+            }
+        }
+        
+        // Substituir correspondências
+        public static fun replace(pattern, text, replacement, flags) {
+            if (flags) {
+                return native_regex_replace(pattern, text, replacement, flags);
+            } else {
+                return native_regex_replace(pattern, text, replacement);
+            }
+        }
+        
+        // Substituir todas as correspondências
+        public static fun replaceAll(pattern, text, replacement, flags) {
+            if (flags) {
+                return native_regex_replace_all(pattern, text, replacement, flags);
+            } else {
+                return native_regex_replace_all(pattern, text, replacement);
+            }
+        }
+        
+        // Dividir string usando regex
+        public static fun split(pattern, text, flags) {
+            if (flags) {
+                return native_regex_split(pattern, text, flags);
+            } else {
+                return native_regex_split(pattern, text);
+            }
+        }
+        
+        // ===== FUNÇÕES EM DRYAD (utilitários e padrões comuns) =====
+        
+        // Verificar se padrão é válido
+        public static fun isValidPattern(pattern) {
+            let result = native_regex_validate(pattern);
+            return result.valid;
+        }
+        
+        // Escapar caracteres especiais em string para uso literal em regex
+        public static fun escape(text) {
+            let result = text;
+            result = String.replaceAll(result, "\\", "\\\\");
+            result = String.replaceAll(result, "^", "\\^");
+            result = String.replaceAll(result, "$", "\\$");
+            result = String.replaceAll(result, ".", "\\.");
+            result = String.replaceAll(result, "*", "\\*");
+            result = String.replaceAll(result, "+", "\\+");
+            result = String.replaceAll(result, "?", "\\?");
+            result = String.replaceAll(result, "(", "\\(");
+            result = String.replaceAll(result, ")", "\\)");
+            result = String.replaceAll(result, "[", "\\[");
+            result = String.replaceAll(result, "]", "\\]");
+            result = String.replaceAll(result, "{", "\\{");
+            result = String.replaceAll(result, "}", "\\}");
+            result = String.replaceAll(result, "|", "\\|");
+            return result;
+        }
+        
+        // ===== PADRÕES COMUNS =====
+        
+        // Validar email
+        public static fun isEmail(email) {
+            let pattern = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+            return RegExp.test(pattern, email);
+        }
+        
+        // Validar URL
+        public static fun isURL(url) {
+            let pattern = "^https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)$";
+            return RegExp.test(pattern, url);
+        }
+        
+        // Validar número de telefone (formato brasileiro)
+        public static fun isPhoneBR(phone) {
+            let pattern = "^\\(?\\d{2}\\)?\\s?9?\\d{4}-?\\d{4}$";
+            return RegExp.test(pattern, phone);
+        }
+        
+        // Validar CPF (formato brasileiro)
+        public static fun isCPF(cpf) {
+            let pattern = "^\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d{2}$";
+            return RegExp.test(pattern, cpf);
+        }
+        
+        // Validar CEP (formato brasileiro)
+        public static fun isCEP(cep) {
+            let pattern = "^\\d{5}-?\\d{3}$";
+            return RegExp.test(pattern, cep);
+        }
+        
+        // Validar IP v4
+        public static fun isIPv4(ip) {
+            let pattern = "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+            return RegExp.test(pattern, ip);
+        }
+        
+        // Validar IP v6
+        public static fun isIPv6(ip) {
+            let pattern = "^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$";
+            return RegExp.test(pattern, ip);
+        }
+        
+        // Validar número inteiro
+        public static fun isInteger(text) {
+            let pattern = "^-?\\d+$";
+            return RegExp.test(pattern, text);
+        }
+        
+        // Validar número decimal
+        public static fun isDecimal(text) {
+            let pattern = "^-?\\d+(\\.\\d+)?$";
+            return RegExp.test(pattern, text);
+        }
+        
+        // Validar senha forte (mínimo 8 chars, maiúscula, minúscula, número, especial)
+        public static fun isStrongPassword(password) {
+            let pattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$";
+            return RegExp.test(pattern, password);
+        }
+        
+        // Validar hexadecimal
+        public static fun isHex(text) {
+            let pattern = "^[0-9a-fA-F]+$";
+            return RegExp.test(pattern, text);
+        }
+        
+        // Validar cor hexadecimal
+        public static fun isHexColor(color) {
+            let pattern = "^#?([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$";
+            return RegExp.test(pattern, color);
+        }
+        
+        // ===== FUNÇÕES DE EXTRAÇÃO =====
+        
+        // Extrair emails de texto
+        public static fun extractEmails(text) {
+            let pattern = "[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}";
+            return RegExp.matchAll(pattern, text, "g");
+        }
+        
+        // Extrair URLs de texto
+        public static fun extractURLs(text) {
+            let pattern = "https?:\\/\\/(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)";
+            return RegExp.matchAll(pattern, text, "g");
+        }
+        
+        // Extrair números de texto
+        public static fun extractNumbers(text) {
+            let pattern = "-?\\d+(\\.\\d+)?";
+            return RegExp.matchAll(pattern, text, "g");
+        }
+        
+        // Extrair palavras (apenas letras)
+        public static fun extractWords(text) {
+            let pattern = "[a-zA-ZÀ-ÿ]+";
+            return RegExp.matchAll(pattern, text, "g");
+        }
+        
+        // Extrair dígitos
+        public static fun extractDigits(text) {
+            let pattern = "\\d";
+            return RegExp.matchAll(pattern, text, "g");
+        }
+        
+        // ===== FUNÇÕES DE LIMPEZA =====
+        
+        // Remover caracteres não alfanuméricos
+        public static fun removeNonAlphanumeric(text) {
+            let pattern = "[^a-zA-Z0-9]";
+            return RegExp.replaceAll(pattern, text, "");
+        }
+        
+        // Remover espaços extras (múltiplos espaços para um)
+        public static fun normalizeSpaces(text) {
+            let pattern = "\\s+";
+            return RegExp.replaceAll(pattern, text, " ");
+        }
+        
+        // Remover números
+        public static fun removeNumbers(text) {
+            let pattern = "\\d";
+            return RegExp.replaceAll(pattern, text, "");
+        }
+        
+        // Remover caracteres especiais
+        public static fun removeSpecialChars(text) {
+            let pattern = "[^a-zA-Z0-9\\s]";
+            return RegExp.replaceAll(pattern, text, "");
+        }
+        
+        // Remover HTML tags
+        public static fun removeHTMLTags(html) {
+            let pattern = "<[^>]*>";
+            return RegExp.replaceAll(pattern, html, "");
+        }
+        
+        // ===== FUNÇÕES DE FORMATAÇÃO =====
+        
+        // Formatar CPF
+        public static fun formatCPF(cpf) {
+            let digits = RegExp.replaceAll("\\D", cpf, "");
+            if (String.length(digits) == 11) {
+                let pattern = "(\\d{3})(\\d{3})(\\d{3})(\\d{2})";
+                return RegExp.replace(pattern, digits, "$1.$2.$3-$4");
+            }
+            return cpf;
+        }
+        
+        // Formatar CNPJ
+        public static fun formatCNPJ(cnpj) {
+            let digits = RegExp.replaceAll("\\D", cnpj, "");
+            if (String.length(digits) == 14) {
+                let pattern = "(\\d{2})(\\d{3})(\\d{3})(\\d{4})(\\d{2})";
+                return RegExp.replace(pattern, digits, "$1.$2.$3/$4-$5");
+            }
+            return cnpj;
+        }
+        
+        // Formatar telefone brasileiro
+        public static fun formatPhoneBR(phone) {
+            let digits = RegExp.replaceAll("\\D", phone, "");
+            if (String.length(digits) == 11) {
+                let pattern = "(\\d{2})(\\d{5})(\\d{4})";
+                return RegExp.replace(pattern, digits, "($1) $2-$3");
+            } else if (String.length(digits) == 10) {
+                let pattern = "(\\d{2})(\\d{4})(\\d{4})";
+                return RegExp.replace(pattern, digits, "($1) $2-$3");
+            }
+            return phone;
+        }
+        
+        // Formatar CEP
+        public static fun formatCEP(cep) {
+            let digits = RegExp.replaceAll("\\D", cep, "");
+            if (String.length(digits) == 8) {
+                let pattern = "(\\d{5})(\\d{3})";
+                return RegExp.replace(pattern, digits, "$1-$2");
+            }
+            return cep;
+        }
+        
+        // ===== FUNÇÕES DE BUSCA AVANÇADA =====
+        
+        // Encontrar posição de correspondência
+        public static fun findPosition(pattern, text, flags) {
+            let match = RegExp.match(pattern, text, flags);
+            if (match) {
+                return native_regex_match_position(match);
+            }
+            return -1;
+        }
+        
+        // Contar correspondências
+        public static fun countMatches(pattern, text, flags) {
+            let matches = RegExp.matchAll(pattern, text, flags);
+            return native_array_length(matches);
+        }
+        
+        // Verificar se texto contém padrão
+        public static fun contains(pattern, text, flags) {
+            return RegExp.test(pattern, text, flags);
+        }
+        
+        // Dividir mantendo delimitadores
+        public static fun splitKeepDelimiter(pattern, text, flags) {
+            return native_regex_split_keep_delimiter(pattern, text, flags);
+        }
+        
+        // ===== FUNÇÕES DE GRUPOS =====
+        
+        // Extrair grupos nomeados
+        public static fun extractNamedGroups(pattern, text, flags) {
+            return native_regex_extract_named_groups(pattern, text, flags);
+        }
+        
+        // Extrair todos os grupos
+        public static fun extractGroups(pattern, text, flags) {
+            return native_regex_extract_groups(pattern, text, flags);
+        }
+        
+        // ===== UTILITÁRIOS =====
+        
+        // Criar padrão case-insensitive
+        public static fun ignoreCase(pattern) {
+            return pattern; // Flag será passada separadamente
+        }
+        
+        // Criar padrão multiline
+        public static fun multiline(pattern) {
+            return pattern; // Flag será passada separadamente
+        }
+        
+        // Criar padrão global
+        public static fun global(pattern) {
+            return pattern; // Flag será passada separadamente
+        }
+        
+        // Combinar flags
+        public static fun combineFlags(flags) {
+            // Exemplo: combineFlags(["i", "g", "m"]) -> "igm"
+            return String.join(flags, "");
+        }
+    }
+}

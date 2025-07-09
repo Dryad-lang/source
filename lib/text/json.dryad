@@ -1,0 +1,269 @@
+// lib/text/json.dryad
+// Módulo para operações JSON
+
+namespace Text {
+    export class JSON {
+        
+        // ===== FUNÇÕES NATIVAS (necessárias para parsing) =====
+        
+        // Parse string JSON para objeto/array
+        public static fn parse(jsonString) {
+            return native_json_parse(jsonString);
+        }
+        
+        // Stringify objeto/array para JSON string
+        public static fn stringify(value, indent) {
+            if (indent) {
+                return native_json_stringify_pretty(value, indent);
+            } else {
+                return native_json_stringify(value);
+            }
+        }
+        
+        // ===== FUNÇÕES EM DRYAD (utilitários) =====
+        
+        // Verificar se string é JSON válido
+        public static fn isValid(jsonString) {
+            // Tentativa de parse em try/catch simulado
+            let result = JSON.tryParse(jsonString);
+            return result.success;
+        }
+        
+        // Parse com tratamento de erro
+        public static fn tryParse(jsonString) {
+            // Simula try/catch até ser implementado
+            let parsed = native_json_try_parse(jsonString);
+            return parsed;
+        }
+        
+        // Stringify com formatação bonita
+        public static fn prettyStringify(value, indentSize) {
+            let indent = indentSize;
+            if (!indent) {
+                indent = 2;
+            }
+            return JSON.stringify(value, indent);
+        }
+        
+        // Stringify compacto (sem espaços)
+        public static fn compactStringify(value) {
+            return JSON.stringify(value);
+        }
+        
+        // Escapar string para JSON
+        public static fn escapeString(str) {
+            let result = str;
+            result = String.replaceAll(result, "\\", "\\\\");
+            result = String.replaceAll(result, "\"", "\\\"");
+            result = String.replaceAll(result, "\n", "\\n");
+            result = String.replaceAll(result, "\r", "\\r");
+            result = String.replaceAll(result, "\t", "\\t");
+            return result;
+        }
+        
+        // Obter valor por caminho (ex: "user.profile.name")
+        public static fn getValueByPath(jsonObj, path) {
+            let pathParts = String.split(path, ".");
+            let currentValue = jsonObj;
+            
+            // Simulação de loop através dos path parts
+            let partsLength = native_array_length(pathParts);
+            if (partsLength > 0) {
+                let key0 = native_array_get(pathParts, 0);
+                currentValue = native_object_get(currentValue, key0);
+            }
+            if (partsLength > 1) {
+                let key1 = native_array_get(pathParts, 1);
+                currentValue = native_object_get(currentValue, key1);
+            }
+            if (partsLength > 2) {
+                let key2 = native_array_get(pathParts, 2);
+                currentValue = native_object_get(currentValue, key2);
+            }
+            if (partsLength > 3) {
+                let key3 = native_array_get(pathParts, 3);
+                currentValue = native_object_get(currentValue, key3);
+            }
+            if (partsLength > 4) {
+                let key4 = native_array_get(pathParts, 4);
+                currentValue = native_object_get(currentValue, key4);
+            }
+            
+            return currentValue;
+        }
+        
+        // Definir valor por caminho
+        public static fn setValueByPath(jsonObj, path, value) {
+            return native_json_set_path(jsonObj, path, value);
+        }
+        
+        // Remover propriedade por caminho
+        public static fn removeByPath(jsonObj, path) {
+            return native_json_remove_path(jsonObj, path);
+        }
+        
+        // Verificar se caminho existe
+        public static fn hasPath(jsonObj, path) {
+            let value = JSON.getValueByPath(jsonObj, path);
+            return value != null;
+        }
+        
+        // Mesclar dois objetos JSON
+        public static fn merge(obj1, obj2) {
+            return native_json_merge(obj1, obj2);
+        }
+        
+        // Mesclar profundamente (deep merge)
+        public static fn deepMerge(obj1, obj2) {
+            return native_json_deep_merge(obj1, obj2);
+        }
+        
+        // Clonar objeto JSON
+        public static fn clone(jsonObj) {
+            let jsonString = JSON.stringify(jsonObj);
+            return JSON.parse(jsonString);
+        }
+        
+        // Clonar profundamente
+        public static fn deepClone(jsonObj) {
+            return JSON.clone(jsonObj);
+        }
+        
+        // Comparar dois objetos JSON
+        public static fn equals(obj1, obj2) {
+            let str1 = JSON.compactStringify(obj1);
+            let str2 = JSON.compactStringify(obj2);
+            return str1 == str2;
+        }
+        
+        // Obter todas as chaves de um objeto
+        public static fn keys(jsonObj) {
+            return native_json_keys(jsonObj);
+        }
+        
+        // Obter todos os valores de um objeto
+        public static fn values(jsonObj) {
+            return native_json_values(jsonObj);
+        }
+        
+        // Obter tamanho de objeto/array
+        public static fn size(jsonValue) {
+            return native_json_size(jsonValue);
+        }
+        
+        // Verificar se é objeto
+        public static fn isObject(value) {
+            return native_json_is_object(value);
+        }
+        
+        // Verificar se é array
+        public static fn isArray(value) {
+            return native_json_is_array(value);
+        }
+        
+        // Filtrar propriedades de objeto
+        public static fn filter(jsonObj, filterFn) {
+            return native_json_filter(jsonObj, filterFn);
+        }
+        
+        // Mapear valores de objeto
+        public static fn map(jsonValue, mapFn) {
+            return native_json_map(jsonValue, mapFn);
+        }
+        
+        // Reduzir objeto/array
+        public static fn reduce(jsonValue, reduceFn, initialValue) {
+            return native_json_reduce(jsonValue, reduceFn, initialValue);
+        }
+        
+        // Converter de query string para objeto
+        public static fn fromQueryString(queryString) {
+            let result = {};
+            if (String.isEmpty(queryString)) {
+                return result;
+            }
+            
+            // Remove '?' se presente
+            let cleanQuery = queryString;
+            if (String.startsWith(cleanQuery, "?")) {
+                cleanQuery = String.slice(cleanQuery, 1);
+            }
+            
+            let pairs = String.split(cleanQuery, "&");
+            let pairsLength = native_array_length(pairs);
+            
+            // Processar cada par key=value
+            if (pairsLength > 0) {
+                let pair0 = native_array_get(pairs, 0);
+                JSON.processQueryPair(result, pair0);
+            }
+            if (pairsLength > 1) {
+                let pair1 = native_array_get(pairs, 1);
+                JSON.processQueryPair(result, pair1);
+            }
+            if (pairsLength > 2) {
+                let pair2 = native_array_get(pairs, 2);
+                JSON.processQueryPair(result, pair2);
+            }
+            // ... continue para mais pares se necessário
+            
+            return result;
+        }
+        
+        // Função auxiliar para processar par key=value
+        private static fn processQueryPair(result, pair) {
+            let keyValue = String.split(pair, "=");
+            let keyValueLength = native_array_length(keyValue);
+            
+            if (keyValueLength >= 2) {
+                let key = native_array_get(keyValue, 0);
+                let value = native_array_get(keyValue, 1);
+                // Decode URL se necessário
+                key = native_url_decode(key);
+                value = native_url_decode(value);
+                native_object_set(result, key, value);
+            }
+        }
+        
+        // Converter objeto para query string
+        public static fn toQueryString(obj) {
+            let keys = JSON.keys(obj);
+            let keysLength = native_array_length(keys);
+            let parts = [];
+            
+            // Processar cada chave
+            if (keysLength > 0) {
+                let key0 = native_array_get(keys, 0);
+                let value0 = native_object_get(obj, key0);
+                let encoded0 = native_url_encode(key0) + "=" + native_url_encode(value0);
+                native_array_push(parts, encoded0);
+            }
+            if (keysLength > 1) {
+                let key1 = native_array_get(keys, 1);
+                let value1 = native_object_get(obj, key1);
+                let encoded1 = native_url_encode(key1) + "=" + native_url_encode(value1);
+                native_array_push(parts, encoded1);
+            }
+            // ... continue para mais chaves
+            
+            return native_array_join(parts, "&");
+        }
+        
+        // Validar schema JSON (básico)
+        public static fn validateSchema(jsonValue, schema) {
+            return native_json_validate_schema(jsonValue, schema);
+        }
+        
+        // Minificar JSON (remover espaços desnecessários)
+        public static fn minify(jsonString) {
+            let parsed = JSON.parse(jsonString);
+            return JSON.compactStringify(parsed);
+        }
+        
+        // Formatar JSON com indentação
+        public static fn format(jsonString, indentSize) {
+            let parsed = JSON.parse(jsonString);
+            return JSON.prettyStringify(parsed, indentSize);
+        }
+    }
+}

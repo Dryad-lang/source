@@ -1,0 +1,103 @@
+// common_libs_functional.dryad
+// Bibliotecas funcionais para Dryad (sem namespaces)
+// Use: use './common_libs_functional.dryad'; no seu código
+
+// ============= IO.Console =============
+export class Console {
+    public static fun println(message) {
+        return native_console_println(message);
+    }
+    
+    public static fun print(message) {
+        return native_console_print(message);
+    }
+    
+    public static fun input(prompt) {
+        return native_console_input(prompt);
+    }
+    
+    public static fun log(message) {
+        return native_console_println(message);
+    }
+}
+
+// ============= Core.Types =============
+export class Types {
+    public static fun typeof(value) {
+        return native_core_typeof(value);
+    }
+    
+    public static fun isString(value) {
+        return native_core_is_string(value);
+    }
+    
+    public static fun isNumber(value) {
+        return native_core_is_number(value);
+    }
+    
+    public static fun isBool(value) {
+        return native_core_is_bool(value);
+    }
+    
+    public static fun isNull(value) {
+        return native_core_is_null(value);
+    }
+    
+    public static fun toString(value) {
+        return native_core_to_string(value);
+    }
+    
+    public static fun toNumber(value) {
+        return native_core_to_number(value);
+    }
+    
+    public static fun toBool(value) {
+        return native_core_to_bool(value);
+    }
+    
+    public static fun equals(a, b) {
+        return native_core_equals(a, b);
+    }
+}
+
+// ============= IO.FileSystem =============
+export class FileSystem {
+    public static fun readFile(filename) {
+        return native_fs_read_file(filename);
+    }
+    
+    public static fun writeFile(filename, content) {
+        return native_fs_write_file(filename, content);
+    }
+    
+    public static fun appendFile(filename, content) {
+        return native_fs_append_file(filename, content);
+    }
+    
+    public static fun fileExists(filename) {
+        return native_fs_file_exists(filename);
+    }
+    
+    public static fun deleteFile(filename) {
+        return native_fs_delete_file(filename);
+    }
+}
+
+// ============= Core.Meta =============
+export class Meta {
+    public static fun getClassName(obj) {
+        return native_core_get_class_name(obj);
+    }
+    
+    public static fun getClassMethods(obj) {
+        return native_core_get_class_methods(obj);
+    }
+    
+    public static fun hasMethod(obj, method) {
+        return native_core_has_method(obj, method);
+    }
+    
+    public static fun eval(code) {
+        return native_core_eval(code);
+    }
+}

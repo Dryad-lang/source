@@ -49,6 +49,10 @@ pub enum Expr {
         class: String,
         args: Vec<Expr>,
     },
+    Assign {
+        name: String,
+        value: Box<Expr>,
+    },
 }
 
 #[derive(Debug, PartialEq, Clone)]

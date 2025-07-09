@@ -154,6 +154,10 @@ impl Env {
         self.exported_items.clone()
     }
     
+    pub fn get_all_variables(&self) -> HashMap<String, Value> {
+        self.variables.clone()
+    }
+    
     pub fn resolve_with_alias(&self, path: &str) -> Option<Value> {
         // Check if path starts with an alias
         let parts: Vec<&str> = path.split('.').collect();

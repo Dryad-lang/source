@@ -1,0 +1,47 @@
+// lib/IO/console_no_namespace.dryad
+// Versão funcional sem namespace da biblioteca Console
+
+export class Console {
+    // Função principal para imprimir com nova linha
+    public static fun println(...args) {
+        return native_console_println(args);
+    }
+
+    // Função para imprimir sem nova linha
+    public static fun print(...args) {
+        return native_console_print(args);
+    }
+
+    // Função para ler entrada do usuário
+    public static fun input(prompt) {
+        if (prompt) {
+            return native_console_input(prompt);
+        } else {
+            return native_console_input();
+        }
+    }
+
+    // Função para ler entrada sem prompt
+    public static fun readLine() {
+        return native_console_input();
+    }
+
+    // Aliases comuns
+    public static fun log(...args) {
+        return Console.println(args);
+    }
+
+    public static fun write(...args) {
+        return Console.print(args);
+    }
+    
+    // Métodos utilitários
+    public static fun clear() {
+        // Clear console (implementação futura)
+        return native_console_clear();
+    }
+    
+    public static fun newLine() {
+        return native_console_println();
+    }
+}

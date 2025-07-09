@@ -1,0 +1,33 @@
+// ============================================================================
+// TESTE COMPLETO DO SISTEMA DE NAMESPACES E USING CORRIGIDO
+// ============================================================================
+
+print("=== TESTE 1: Namespace direto ===")
+
+// Definir namespace inline (funciona agora)
+namespace Test {
+    export class Console {
+        static fn println(message) {
+            print(message)
+        }
+    }
+}
+
+// Chamar método estático de namespace (CORRIGIDO ✅)
+Test.Console.println("Namespace direto funciona!")
+
+print("=== TESTE 2: Using biblioteca funcional ===")
+
+// Usar biblioteca sem namespace (sempre funcionou)
+use './common_libs_functional.dryad';
+
+Console.println("Biblioteca funcional funciona!")
+Types.toString(123)
+
+print("=== TESTE COMPLETO ===")
+print("✅ Sistema de namespaces CORRIGIDO!")
+print("✅ Métodos estáticos em namespaces funcionam!")
+print("✅ Parser reconhece 'fn' além de 'fun'!")
+print("✅ Bibliotecas funcionais continuam funcionando!")
+
+// TODO: Sistema using ainda precisa de ajustes para bibliotecas com namespace

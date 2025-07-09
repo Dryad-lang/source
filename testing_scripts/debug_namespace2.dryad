@@ -1,0 +1,9 @@
+namespace Test {
+    export class Console {
+        static fn println(message) {
+            print(message)
+        }
+    }
+}
+
+Test.Console.println("Direct call test")

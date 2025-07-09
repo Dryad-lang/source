@@ -1,45 +1,53 @@
 {
-  "name": "my-dryad-project",
+  "name": "dryad-core-project",
   "version": "1.0.0",
-  "description": "A comprehensive Dryad project using Oak package manager",
-  "author": "Dryad Developer",
+  "description": "Dryad language core project with common libraries",
+  "author": "Dryad Team",
   "license": "MIT",
-  "homepage": "https://github.com/user/my-dryad-project",
-  "repository": "https://github.com/user/my-dryad-project.git",
-  "keywords": ["dryad", "oak", "programming", "language"],
-  "dependencies": {
-    "math-utils": {
-      "version": "1.2.0",
-      "source": {"Registry": "https://registry.dryad-lang.org"},
-      "optional": false,
-      "dev": false
-    },
-    "json-parser": {
-      "version": "latest",
-      "source": {"Registry": "https://registry.dryad-lang.org"},
-      "optional": false,
-      "dev": false
-    }
-  },
-  "dev_dependencies": {
-    "test-framework": {
-      "version": "1.0.0",
-      "source": {"Registry": "https://registry.dryad-lang.org"},
-      "optional": false,
-      "dev": true
-    }
-  },
+  "homepage": null,
+  "repository": null,
+  "keywords": ["dryad", "language", "interpreter", "text", "json", "xml", "regex"],
+  "dependencies": {},
+  "dev_dependencies": {},
   "lib_paths": [
-    "./lib",
-    "./node_modules",
-    "./custom/libraries"
+    "./lib"
   ],
   "scripts": {
-    "test": "dryad tests/runner.dryad",
-    "build": "dryad build.dryad",
-    "start": "dryad src/main.dryad",
-    "dev": "dryad --verbose src/main.dryad",
-    "lint": "dryad --strict src/**/*.dryad"
+    "test": "cargo test",
+    "build": "cargo build",
+    "run": "cargo run"
+  },
+  "modules": {
+    "text.string": {
+      "path": "./lib/text/string.dryad",
+      "description": "String manipulation utilities",
+      "exports": ["String"]
+    },
+    "text.json": {
+      "path": "./lib/text/json.dryad", 
+      "description": "JSON parsing and manipulation",
+      "exports": ["JSON"]
+    },
+    "text.xml": {
+      "path": "./lib/text/xml.dryad",
+      "description": "XML parsing and manipulation", 
+      "exports": ["XML"]
+    },
+    "text.regexp": {
+      "path": "./lib/text/regexp.dryad",
+      "description": "Regular expression utilities",
+      "exports": ["RegExp"]
+    },
+    "text.format": {
+      "path": "./lib/text/format.dryad",
+      "description": "Advanced text formatting utilities",
+      "exports": ["Format"]
+    },
+    "io.console": {
+      "path": "./lib/IO/console.dryad",
+      "description": "Console input/output operations",
+      "exports": ["Console"]
+    }
   },
   "oak_version": "1.0.0"
 }

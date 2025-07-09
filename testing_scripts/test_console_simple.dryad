@@ -1,0 +1,6 @@
+// Teste usando Console simples
+using lib.IO.console_simple;
+
+print("Teste before using")
+Console.println("Test using Console import")
+IO.Console.println("Test using full namespace")

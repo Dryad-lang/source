@@ -102,6 +102,10 @@ impl Parser {
     }
 
     fn parse_let(&mut self) -> Option<Stmt> {
+        self.parse_let_with_semicolon(true)
+    }
+    
+    fn parse_let_with_semicolon(&mut self, consume_semicolon: bool) -> Option<Stmt> {
         self.advance(); // consume 'let'
 
         if let Token::Identifier(name) = &self.current {
@@ -114,8 +118,10 @@ impl Parser {
             self.advance(); // consume '='
 
             let expr = self.parse_expression()?;
-            // Consumir ponto e vírgula opcional
-            self.matches(&Token::Semicolon);
+            // Consumir ponto e vírgula apenas se solicitado
+            if consume_semicolon {
+                self.matches(&Token::Semicolon);
+            }
             Some(Stmt::Let { name, value: expr })
         } else {
             None
@@ -178,6 +184,9 @@ impl Parser {
         
         let init = if self.check(&Token::Semicolon) {
             None
+        } else if self.check(&Token::Let) {
+            // Para declarações let no for, não consumir o semicolon
+            Some(Box::new(self.parse_let_with_semicolon(false)?))
         } else {
             Some(Box::new(self.parse_statement()?))
         };
@@ -199,7 +208,27 @@ impl Parser {
         self.advance(); // consume ';'
         
         let post = if !self.check(&Token::RParen) {
-            Some(self.parse_expression()?)
+            // Verificar se é uma atribuição (identificador seguido de =)
+            if let Token::Identifier(name) = &self.current.clone() {
+                let name_clone = name.clone();
+                let peek_token = self.peek.clone();
+                
+                if let Token::Equal = peek_token {
+                    // É uma atribuição: i = i + 1
+                    self.advance(); // consume identificador
+                    self.advance(); // consume '='
+                    let value = self.parse_expression()?;
+                    Some(Expr::Assign {
+                        name: name_clone,
+                        value: Box::new(value),
+                    })
+                } else {
+                    // Não é uma atribuição, parse como expressão normal
+                    Some(self.parse_expression()?)
+                }
+            } else {
+                Some(self.parse_expression()?)
+            }
         } else {
             None
         };
@@ -607,6 +636,7 @@ impl Parser {
         let mut fields = Vec::new();
 
         while !self.check(&Token::RBrace) && !self.check(&Token::Eof) {
+            // Parse visibility and static modifiers
             let (member_visibility, is_static) = if matches!(self.current, Token::Public | Token::Private | Token::Protected | Token::Static) {
                 self.parse_visibility_and_static()
             } else {
@@ -617,6 +647,8 @@ impl Parser {
                 Token::Fun | Token::Function => {
                     if let Some(method) = self.parse_function_with_modifiers(member_visibility, is_static) {
                         methods.push(method);
+                    } else {
+                        break; // Failed to parse method
                     }
                 },
                 Token::Identifier(field_name) => {
@@ -631,7 +663,10 @@ impl Parser {
                         return None;
                     }
                 },
-                _ => break,
+                _ => {
+                    // Unknown token in class body, break out
+                    break;
+                }
             }
         }
 

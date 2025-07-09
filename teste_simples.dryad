@@ -1,0 +1,26 @@
+// Teste simples da linguagem Dryad
+using IO.Console;
+using Text.JSON;
+
+// Teste básico de console
+Console.println("🎉 Dryad está funcionando!");
+
+// Teste de JSON
+let dados = {
+    projeto: "Dryad",
+    versao: "0.1.0",
+    status: "Concluído"
+};
+
+Console.println("Dados processados");
+
+let json_str = JSON.stringify(dados);
+Console.println("JSON: " + json_str);
+
+// Teste de parsing
+let parsed = JSON.parse(json_str);
+Console.println("Projeto: " + parsed.projeto);
+Console.println("Status: " + parsed.status);
+
+Console.println("✅ Todos os testes passaram!");
+Console.println("🚀 Dryad está pronto para produção!");

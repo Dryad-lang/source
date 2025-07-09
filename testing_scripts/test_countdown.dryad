@@ -1,9 +1,0 @@
-print("Contagem regressiva:");
-
-let i = 5;
-while (i > 0) {
-    print("T-" + i);
-    i = i - 1;
-}
-
-print("Lançamento!");

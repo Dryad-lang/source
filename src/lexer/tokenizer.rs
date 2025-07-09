@@ -177,7 +177,7 @@ impl Lexer {
 
         match ident.as_str() {
             "let" => Token::Let,
-            "fun" => Token::Fun,
+            "fun" | "fn" => Token::Fun,
             "function" => Token::Function,
             "if" => Token::If,
             "else" => Token::Else,

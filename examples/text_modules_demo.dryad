@@ -1,0 +1,155 @@
+// examples/text_modules_demo.dryad
+// Demonstração dos módulos de texto da Dryad
+
+import { String } from "text.string";
+import { JSON } from "text.json";
+import { XML } from "text.xml";
+import { RegExp } from "text.regexp";
+import { Format } from "text.format";
+import { Console } from "io.console";
+
+fun main() {
+    Console.println("=== Demonstração dos Módulos de Texto ===\n");
+    
+    // ===== String Module =====
+    Console.println("--- String Module ---");
+    let text = "  Hello, Dryad World!  ";
+    Console.println("Original: '" + text + "'");
+    Console.println("Length: " + String.length(text));
+    Console.println("Trimmed: '" + String.trim(text) + "'");
+    Console.println("Uppercase: " + String.toUpperCase(text));
+    Console.println("Contains 'Dryad': " + String.contains(text, "Dryad"));
+    Console.println("Slice(2, 7): '" + String.slice(text, 2, 7) + "'");
+    Console.println("");
+    
+    // ===== JSON Module =====
+    Console.println("--- JSON Module ---");
+    let person = {
+        name: "João Silva",
+        age: 30,
+        city: "São Paulo",
+        skills: ["JavaScript", "Dryad", "Python"]
+    };
+    
+    let jsonString = JSON.stringify(person);
+    Console.println("JSON String: " + jsonString);
+    
+    let prettyJson = JSON.prettyStringify(person);
+    Console.println("Pretty JSON:\n" + prettyJson);
+    
+    let parsed = JSON.parse(jsonString);
+    Console.println("Parsed back - Name: " + JSON.getValueByPath(parsed, "name"));
+    Console.println("");
+    
+    // ===== XML Module =====
+    Console.println("--- XML Module ---");
+    let xmlData = "<user id=\"123\"><name>Maria</name><email>maria@test.com</email></user>";
+    Console.println("XML: " + xmlData);
+    Console.println("Is valid XML: " + XML.isValid(xmlData));
+    
+    let userElement = XML.createElement("user", "", {id: "456", active: "true"});
+    Console.println("Created element: " + userElement);
+    
+    let escapedText = XML.escapeText("Hello <world> & \"friends\"!");
+    Console.println("Escaped text: " + escapedText);
+    Console.println("");
+    
+    // ===== RegExp Module =====
+    Console.println("--- RegExp Module ---");
+    let email = "contato@example.com";
+    Console.println("Email: " + email);
+    Console.println("Is valid email: " + RegExp.isEmail(email));
+    
+    let phone = "11987654321";
+    Console.println("Phone: " + phone);
+    Console.println("Formatted phone: " + RegExp.formatPhoneBR(phone));
+    
+    let textWithNumbers = "Hoje é dia 25 de dezembro de 2023";
+    let numbers = RegExp.extractNumbers(textWithNumbers);
+    Console.println("Text: " + textWithNumbers);
+    Console.println("Extracted numbers: " + String.join(numbers, ", "));
+    Console.println("");
+    
+    // ===== Format Module =====
+    Console.println("--- Format Module ---");
+    let amount = 1234.56;
+    Console.println("Amount: " + amount);
+    Console.println("Formatted number: " + Format.formatNumber(amount));
+    Console.println("Currency: " + Format.formatCurrency(amount));
+    Console.println("Percentage: " + Format.formatPercentage(0.1234));
+    
+    let name = "joão silva santos";
+    Console.println("Name: " + name);
+    Console.println("Title case: " + Format.titleCase(name));
+    Console.println("Camel case: " + Format.camelCase(name));
+    Console.println("Snake case: " + Format.snakeCase(name));
+    Console.println("Pascal case: " + Format.pascalCase(name));
+    
+    let longText = "Este é um texto muito longo que precisa ser truncado";
+    Console.println("Long text: " + longText);
+    Console.println("Truncated: " + Format.truncate(longText, 30));
+    
+    let fileSize = 1048576;
+    Console.println("File size (bytes): " + fileSize);
+    Console.println("Formatted size: " + Format.formatBytes(fileSize));
+    
+    // Template example
+    let template = "Olá {name}, você tem {age} anos e mora em {city}.";
+    let vars = {
+        name: "Ana",
+        age: "25", 
+        city: "Rio de Janeiro"
+    };
+    Console.println("Template: " + template);
+    Console.println("Result: " + Format.template(template, vars));
+    Console.println("");
+    
+    // ===== Integração entre módulos =====
+    Console.println("--- Integração entre Módulos ---");
+    
+    // Processar dados JSON com validação e formatação
+    let userData = {
+        name: "pedro oliveira",
+        email: "pedro@test.com",
+        phone: "11999887766",
+        salary: 5500.75
+    };
+    
+    // Formatar nome
+    userData.name = Format.titleCase(userData.name);
+    
+    // Validar e formatar email
+    if (RegExp.isEmail(userData.email)) {
+        Console.println("Email válido: " + userData.email);
+    }
+    
+    // Formatar telefone
+    userData.phone = RegExp.formatPhoneBR(userData.phone);
+    
+    // Formatar salário
+    let formattedSalary = Format.formatCurrency(userData.salary);
+    
+    // Criar relatório em JSON
+    let report = {
+        user: userData.name,
+        contact: {
+            email: userData.email,
+            phone: userData.phone
+        },
+        salary: formattedSalary,
+        generated_at: "2023-12-25T10:30:00Z"
+    };
+    
+    Console.println("Relatório final:");
+    Console.println(JSON.prettyStringify(report));
+    
+    // Converter para XML
+    let xmlReport = XML.fromJSON(report, "user_report");
+    Console.println("\nRelatório em XML:");
+    Console.println(XML.format(xmlReport));
+    
+    Console.println("\n=== Demonstração concluída! ===");
+}
+
+// Executar demonstração
+main();
