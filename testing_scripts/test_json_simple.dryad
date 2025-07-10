@@ -1,5 +1,0 @@
-// Teste mais simples
-using lib.text.json;
-
-print("Using executado")
-Text.JSON.stringify("test")

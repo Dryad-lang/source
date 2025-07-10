@@ -1,3 +1,0 @@
-static fun test() {
-    print("Static function test")
-}

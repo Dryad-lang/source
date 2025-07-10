@@ -1,7 +1,0 @@
-// Teste simples do sistema de using corrigido
-
-// Testar se o arquivo lib/IO/console.dryad é carregado
-using lib.IO.console;
-
-// Agora deveria funcionar
-Test.Console.println("Direct test")

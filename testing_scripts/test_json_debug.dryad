@@ -1,9 +1,0 @@
-// Teste direto do namespace Text.JSON
-using lib.text.json;
-
-let obj = {"name": "test", "value": 123}
-let jsonStr = Text.JSON.stringify(obj)
-print("Direct namespace call: " + jsonStr)
-
-// Tentativa de usar JSON importado diretamente
-JSON.stringify(obj)

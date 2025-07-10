@@ -1,10 +1,14 @@
 // src/lexer/tokenizer.rs
 
 use crate::lexer::token::Token;
+use crate::interpreter::errors::{DryadError, ErrorCode};
 
 pub struct Lexer {
     input: Vec<char>,
     current: usize,
+    line: usize,
+    column: usize,
+    errors: Vec<DryadError>,
 }
 
 impl Lexer {
@@ -12,7 +16,19 @@ impl Lexer {
         Self {
             input: input.chars().collect(),
             current: 0,
+            line: 1,
+            column: 1,
+            errors: Vec::new(),
         }
+    }
+    
+    pub fn get_errors(&self) -> &[DryadError] {
+        &self.errors
+    }
+    
+    fn add_error(&mut self, code: ErrorCode, message: String) {
+        let error = DryadError::with_code(code, message, Some((self.line, self.column)));
+        self.errors.push(error);
     }
 
     pub fn next_token(&mut self) -> Token {
@@ -28,6 +44,7 @@ impl Lexer {
             '+' => Token::Plus,
             '-' => Token::Minus,
             '*' => Token::Star,
+            '%' => Token::Mod,
             '/' => {
                 if self.match_char('/') {
                     // Comentário de linha - pular até o fim da linha
@@ -83,6 +100,8 @@ impl Lexer {
             ')' => Token::RParen,
             '{' => Token::LBrace,
             '}' => Token::RBrace,
+            '[' => Token::LBracket,
+            ']' => Token::RBracket,
             ',' => Token::Comma,
             ';' => Token::Semicolon,
             '.' => Token::Dot,
@@ -90,7 +109,13 @@ impl Lexer {
             '\'' => self.read_string('\''),
             ch if ch.is_ascii_digit() => self.read_number(ch),
             ch if Self::is_identifier_start(ch) => self.read_identifier(ch),
-            _ => self.next_token(), // ignora caractere inválido
+            ch => {
+                self.add_error(
+                    ErrorCode::E1001,
+                    format!("Unexpected character '{}' (ASCII: {})", ch, ch as u32)
+                );
+                self.next_token() // Continue parsing
+            }
         }
     }
 
@@ -101,6 +126,14 @@ impl Lexer {
     fn advance(&mut self) -> char {
         let ch = self.input[self.current];
         self.current += 1;
+        
+        if ch == '\n' {
+            self.line += 1;
+            self.column = 1;
+        } else {
+            self.column += 1;
+        }
+        
         ch
     }
 
@@ -138,29 +171,110 @@ impl Lexer {
 
     fn read_number(&mut self, first: char) -> Token {
         let mut number = first.to_string();
+        let mut has_dot = false;
 
         while let Some(ch) = self.peek() {
-            if ch.is_ascii_digit() || ch == '.' {
+            if ch.is_ascii_digit() {
                 number.push(self.advance());
+            } else if ch == '.' && !has_dot {
+                has_dot = true;
+                number.push(self.advance());
+                
+                // Verificar se há dígito após o ponto
+                if let Some(next_ch) = self.peek() {
+                    if !next_ch.is_ascii_digit() {
+                        self.add_error(
+                            ErrorCode::E1004,
+                            "Invalid number format: decimal point must be followed by digits".to_string()
+                        );
+                        break;
+                    }
+                } else {
+                    self.add_error(
+                        ErrorCode::E1004,
+                        "Invalid number format: decimal point at end of input".to_string()
+                    );
+                    break;
+                }
+            } else if ch == '.' && has_dot {
+                self.add_error(
+                    ErrorCode::E1004,
+                    "Invalid number format: multiple decimal points".to_string()
+                );
+                break;
             } else {
                 break;
             }
         }
 
-        Token::Number(number.parse().unwrap_or(0.0))
+        match number.parse::<f64>() {
+            Ok(value) => Token::Number(value),
+            Err(_) => {
+                self.add_error(
+                    ErrorCode::E1004,
+                    format!("Invalid number format: '{}'", number)
+                );
+                Token::Number(0.0)
+            }
+        }
     }
 
     fn read_string(&mut self, delimiter: char) -> Token {
         let mut value = String::new();
+        let start_line = self.line;
+        let start_column = self.column;
 
         while let Some(ch) = self.peek() {
             if ch == delimiter {
                 self.advance();
-                break;
+                return Token::String(value);
             }
-            value.push(self.advance());
+            
+            if ch == '\n' && delimiter != '`' {
+                // String multi-linha só permitida com template literals
+                self.add_error(
+                    ErrorCode::E1002,
+                    format!("Unterminated string literal starting at {}:{}", start_line, start_column)
+                );
+                return Token::String(value);
+            }
+            
+            if ch == '\\' {
+                self.advance(); // Consome a barra
+                if let Some(escaped) = self.peek() {
+                    match escaped {
+                        'n' => { self.advance(); value.push('\n'); }
+                        't' => { self.advance(); value.push('\t'); }
+                        'r' => { self.advance(); value.push('\r'); }
+                        '\\' => { self.advance(); value.push('\\'); }
+                        '"' => { self.advance(); value.push('"'); }
+                        '\'' => { self.advance(); value.push('\''); }
+                        _ => {
+                            self.add_error(
+                                ErrorCode::E1005,
+                                format!("Invalid escape sequence '\\{}'", escaped)
+                            );
+                            self.advance();
+                            value.push(escaped);
+                        }
+                    }
+                } else {
+                    self.add_error(
+                        ErrorCode::E1005,
+                        "Incomplete escape sequence at end of input".to_string()
+                    );
+                }
+            } else {
+                value.push(self.advance());
+            }
         }
 
+        // Se chegou aqui, a string não foi fechada
+        self.add_error(
+            ErrorCode::E1002,
+            format!("Unterminated string literal starting at {}:{}", start_line, start_column)
+        );
+        
         Token::String(value)
     }
 

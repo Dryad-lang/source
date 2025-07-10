@@ -9,9 +9,27 @@ pub struct Parser {
     current: Token,
     peek: Token,
 }
+    fn parse_factor(&mut self) -> Option<Expr> {
+        let mut expr = self.parse_primary()?;
 
-impl Parser {
-    pub fn new(mut lexer: Lexer) -> Self {
+        while matches!(self.current, Token::Star | Token::Slash | Token::Mod) {
+            let op = match &self.current {
+                Token::Star => BinaryOp::Mul,
+                Token::Slash => BinaryOp::Div,
+                Token::Mod => BinaryOp::Mod,
+                _ => unreachable!(),
+            };
+            self.advance();
+            let right = self.parse_primary()?;
+            expr = Expr::Binary {
+                left: Box::new(expr),
+                op,
+                right: Box::new(right),
+            };
+        }
+
+        Some(expr)
+    } pub fn new(mut lexer: Lexer) -> Self {
         let current = lexer.next_token();
         let peek = lexer.next_token();
         Self { lexer, current, peek }
@@ -256,6 +274,7 @@ impl Parser {
             let op = match &self.current {
                 Token::Star => BinaryOp::Mul,
                 Token::Slash => BinaryOp::Div,
+                Token::Mod => BinaryOp::Mod,
                 _ => unreachable!(),
             };
             self.advance();

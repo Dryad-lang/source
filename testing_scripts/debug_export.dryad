@@ -1,5 +1,0 @@
-export class TestClass {
-    static fn test() {
-        print("Test function")
-    }
-}

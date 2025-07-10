@@ -1,0 +1,52 @@
+// lib/math/core.dryad
+// Módulo central de matemática para Dryad
+
+namespace Math {
+    export class Core {
+        // Retorna o valor absoluto
+        public static fn abs(x) {
+            if (x < 0) {
+                return -x;
+            }
+            return x;
+        }
+
+        // Retorna o maior entre dois valores
+        public static fn max(a, b) {
+            if (a > b) {
+                return a;
+            }
+            return b;
+        }
+
+        // Retorna o menor entre dois valores
+        public static fn min(a, b) {
+            if (a < b) {
+                return a;
+            }
+            return b;
+        }
+
+        // Raiz quadrada (aproximação simples)
+        public static fn sqrt(x) {
+            let guess = x / 2;
+            let i = 0;
+            while (i < 10) {
+                guess = (guess + x / guess) / 2;
+                i = i + 1;
+            }
+            return guess;
+        }
+
+        // Potência
+        public static fn pow(base, exp) {
+            let result = 1;
+            let i = 0;
+            while (i < exp) {
+                result = result * base;
+                i = i + 1;
+            }
+            return result;
+        }
+    }
+}

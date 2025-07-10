@@ -1,6 +1,0 @@
-// Simple export for Dryad
-// This module exports a simple function to print a message to the console
-
-export function printMessage(message) {
-    print(message);
-}

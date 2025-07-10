@@ -199,6 +199,10 @@ mod interpreter_tests {
     fn test_string_operations() {
         let (env, errors) = interpreter_tests::eval_code(r#"let greeting = "Hello " + "World";"#);
         
+        // As env is currently not fully implemented,
+        // just fake use to avoid unused variable warning and not use processing
+        let _ = &env; // Avoid unused variable warning
+
         if !errors.is_empty() {
             println!("Errors in string operations test: {:?}", errors);
         }

@@ -3,7 +3,8 @@
 
 use std::collections::HashMap;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::env;
 use serde_json::Value;
 use crate::lexer::tokenizer::Lexer;
 use crate::parser::parser::Parser;
@@ -39,14 +40,40 @@ pub struct ModuleLoader {
 
 impl ModuleLoader {
     pub fn new() -> Self {
+        let mut search_paths = vec![
+            ".".to_string(),
+            "modules".to_string(),
+        ];
+        
+        // 1. Detectar diretório do executável e procurar lib ao lado do exe
+        if let Ok(exe_path) = env::current_exe() {
+            if let Some(exe_dir) = exe_path.parent() {
+                // Lib no mesmo diretório do executável (para distribuição)
+                let exe_lib_path = exe_dir.join("lib");
+                if exe_lib_path.exists() {
+                    search_paths.push(exe_lib_path.to_string_lossy().to_string());
+                }
+            }
+        }
+        
+        // 2. Procurar oak_modules local (projeto com oak init)
+        let oak_modules = PathBuf::from("oak_modules");
+        if oak_modules.exists() {
+            search_paths.push("oak_modules".to_string());
+        }
+        
+        // 3. Lib no workspace atual (desenvolvimento)
+        if Path::new("lib").exists() {
+            search_paths.push("lib".to_string());
+        }
+        
+        // 4. Lib relativa ao current directory (fallback)
+        search_paths.push("../lib".to_string());
+        search_paths.push("../../lib".to_string());
+        
         let mut loader = Self {
             modules: HashMap::new(),
-            search_paths: vec![
-                ".".to_string(),
-                "modules".to_string(),
-                "tests/modules".to_string(),
-                "lib".to_string(),
-            ],
+            search_paths,
         };
         
         // Load oaklibs.json if it exists
@@ -128,16 +155,22 @@ impl ModuleLoader {
                 None,
                 ErrorSeverity::Error,
             ))?;
-        
-        // Faz parse do conteúdo
+          // Faz parse do conteúdo
         let lexer = Lexer::new(&content);
         let mut parser = Parser::new(lexer);
         
         let mut statements = Vec::new();
+        let mut statement_count = 0;
         while let Some(stmt) = parser.parse_statement() {
+            statement_count += 1;
+            // Usa o statement count apenas para evitar o warning de unused variable
+            // porem sem consumi-lo para evitar consumo desnecessário
+            if statement_count != 0 {
+                // Apenas para evitar warning de unused variable
+            }
             statements.push(stmt);
         }
-        
+
         // Cria o módulo
         let mut module = Module::new(module_name.to_string(), file_path);
         module.statements = statements.clone();

@@ -4,9 +4,9 @@
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-use serde_json::{json, Value};
+use serde_json::Value;
 
-use super::config::{OakPackage, OakDependency};
+use super::config::OakPackage;
 
 /// Trait para diferentes tipos de registries
 pub trait PackageRegistry: Send + Sync {
@@ -43,6 +43,7 @@ pub struct LocalRegistry {
 
 /// Registry remoto (URL/API)
 pub struct RemoteRegistry {
+    #[allow(dead_code)]
     base_url: String,
     cache_path: PathBuf,
     auth_token: Option<String>,
@@ -50,6 +51,7 @@ pub struct RemoteRegistry {
 
 /// Registry Git (repositório Git)
 pub struct GitRegistry {
+    #[allow(dead_code)]
     repository_url: String,
     cache_path: PathBuf,
     branch: String,
@@ -71,6 +73,7 @@ impl LocalRegistry {
     }
 
     /// Carrega pacotes do cache local
+    #[allow(dead_code)]
     fn load_cache(&mut self) -> Result<(), String> {
         if !self.cache_path.exists() {
             return Ok(());
@@ -96,6 +99,7 @@ impl LocalRegistry {
     }
 
     /// Escaneia versões de um pacote
+    #[allow(dead_code)]
     fn scan_package_versions(&self, package_path: &Path) -> Result<Vec<OakPackage>, String> {
         let mut versions = Vec::new();
         
@@ -272,7 +276,7 @@ impl PackageRegistry for RemoteRegistry {
         Err("Remote listing not implemented yet".to_string())
     }
 
-    fn install_package(&self, package: &OakPackage) -> Result<(), String> {
+    fn install_package(&self, _package: &OakPackage) -> Result<(), String> {
         // TODO: Implementar download e instalação
         Err("Remote installation not implemented yet".to_string())
     }
@@ -282,7 +286,7 @@ impl PackageRegistry for RemoteRegistry {
         local_registry.remove_package(name, version)
     }
 
-    fn publish_package(&self, package: &OakPackage, source_path: &Path) -> Result<(), String> {
+    fn publish_package(&self, _package: &OakPackage, _source_path: &Path) -> Result<(), String> {
         // TODO: Implementar upload para registry remoto
         Err("Remote publishing not implemented yet".to_string())
     }
@@ -326,7 +330,7 @@ impl PackageRegistry for GitRegistry {
         Ok(())
     }
 
-    fn find_package(&self, name: &str, version: &str) -> Result<Option<OakPackage>, String> {
+    fn find_package(&self, _name: &str, _version: &str) -> Result<Option<OakPackage>, String> {
         // TODO: Implementar busca no repositório Git
         Err("Git registry search not implemented yet".to_string())
     }
@@ -336,27 +340,27 @@ impl PackageRegistry for GitRegistry {
         Err("Git registry listing not implemented yet".to_string())
     }
 
-    fn install_package(&self, package: &OakPackage) -> Result<(), String> {
+    fn install_package(&self, _package: &OakPackage) -> Result<(), String> {
         // TODO: Implementar instalação de pacotes Git
         Err("Git package installation not implemented yet".to_string())
     }
 
-    fn remove_package(&self, name: &str, version: &str) -> Result<(), String> {
+    fn remove_package(&self, _name: &str, _version: &str) -> Result<(), String> {
         // TODO: Implementar remoção de pacotes Git
         Err("Git package removal not implemented yet".to_string())
     }
 
-    fn publish_package(&self, package: &OakPackage, source_path: &Path) -> Result<(), String> {
+    fn publish_package(&self, _package: &OakPackage, _source_path: &Path) -> Result<(), String> {
         // TODO: Implementar commit e push para Git
         Err("Git publishing not implemented yet".to_string())
     }
 
-    fn is_installed(&self, name: &str, version: &str) -> bool {
+    fn is_installed(&self, _name: &str, _version: &str) -> bool {
         // TODO: Verificar se pacote está no cache Git
         false
     }
 
-    fn get_metadata(&self, name: &str, version: &str) -> Result<Value, String> {
+    fn get_metadata(&self, _name: &str, _version: &str) -> Result<Value, String> {
         // TODO: Obter metadados do repositório Git
         Err("Git metadata not implemented yet".to_string())
     }

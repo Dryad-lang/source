@@ -21,6 +21,11 @@ pub enum Expr {
     String(String),
     Bool(bool),
     Null,
+    Array(Vec<Expr>),
+    Index {
+        object: Box<Expr>,
+        index: Box<Expr>,
+    },
     Identifier(String),
     This,
     Binary {
@@ -61,6 +66,7 @@ pub enum BinaryOp {
     Sub,
     Mul,
     Div,
+    Mod,
     Equal,
     NotEqual,
     Less,

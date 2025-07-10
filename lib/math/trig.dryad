@@ -1,0 +1,91 @@
+// lib/math/trig.dryad
+// Funções trigonométricas
+
+namespace Math {
+    export class Trig {
+        // Constante PI
+        public static fn PI() {
+            return 3.141592653589793;
+        }
+        
+        // Converte graus para radianos
+        public static fn deg_to_rad(degrees) {
+            return degrees * (Trig.PI() / 180);
+        }
+        
+        // Converte radianos para graus
+        public static fn rad_to_deg(radians) {
+            return radians * (180 / Trig.PI());
+        }
+        
+        // Seno usando série de Taylor
+        public static fn sin(x) {
+            let result = 0;
+            let term = x;
+            let i = 1;
+            
+            while (i <= 10) {
+                result = result + term;
+                term = term * (-1) * x * x / ((2 * i) * (2 * i + 1));
+                i = i + 1;
+            }
+            return result;
+        }
+        
+        // Cosseno usando série de Taylor
+        public static fn cos(x) {
+            let result = 1;
+            let term = 1;
+            let i = 1;
+            
+            while (i <= 10) {
+                term = term * (-1) * x * x / ((2 * i - 1) * (2 * i));
+                result = result + term;
+                i = i + 1;
+            }
+            return result;
+        }
+        
+        // Tangente
+        public static fn tan(x) {
+            return Trig.sin(x) / Trig.cos(x);
+        }
+        
+        // Arco seno (aproximação)
+        public static fn asin(x) {
+            if (x < -1 || x > 1) return 0;
+            return x + (x * x * x / 6) + (3 * x * x * x * x * x / 40);
+        }
+        
+        // Arco cosseno (aproximação)
+        public static fn acos(x) {
+            return (Trig.PI() / 2) - Trig.asin(x);
+        }
+        
+        // Arco tangente (aproximação)
+        public static fn atan(x) {
+            if (x > 1) return (Trig.PI() / 2) - Trig.atan(1 / x);
+            if (x < -1) return -(Trig.PI() / 2) - Trig.atan(1 / x);
+            return x - (x * x * x / 3) + (x * x * x * x * x / 5);
+        }
+        
+        // Seno hiperbólico
+        public static fn sinh(x) {
+            let ex = Core.exp(x);
+            let e_neg_x = Core.exp(-x);
+            return (ex - e_neg_x) / 2;
+        }
+        
+        // Cosseno hiperbólico
+        public static fn cosh(x) {
+            let ex = Core.exp(x);
+            let e_neg_x = Core.exp(-x);
+            return (ex + e_neg_x) / 2;
+        }
+        
+        // Tangente hiperbólica
+        public static fn tanh(x) {
+            return Trig.sinh(x) / Trig.cosh(x);
+        }
+    }
+}

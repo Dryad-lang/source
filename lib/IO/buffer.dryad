@@ -3,85 +3,21 @@
 
 namespace IO {
     export class Buffer {
-        private data;
-        private size;
-        
-        public fun init(initialSize) {
+        // Funções estáticas para compatibilidade
+        public static fn create(initialSize) {
             if (initialSize) {
-                this.size = initialSize;
-                this.data = native_buffer_create(initialSize);
+                return native_buffer_create(initialSize);
             } else {
-                this.size = 0;
-                this.data = native_buffer_create(0);
+                return native_buffer_create(0);
             }
         }
         
-        public fun length() {
-            return native_buffer_length(this.data);
+        public static fn length(buffer) {
+            return native_buffer_length(buffer);
         }
         
-        public fun resize(newSize) {
-            this.size = newSize;
-            this.data = native_buffer_create(newSize);
-            return this;
-        }
-        
-        public fun clear() {
-            this.data = native_buffer_create(0);
-            this.size = 0;
-            return this;
-        }
-        
-        public fun toString() {
-            return native_types_to_string(this.data);
-        }
-        
-        public fun append(content) {
-            // Implementação futura para append em buffer
-            return native_buffer_append(this.data, content);
-        }
-        
-        public fun read(position, length) {
-            return native_buffer_read(this.data, position, length);
-        }
-        
-        public fun write(position, content) {
-            return native_buffer_write(this.data, position, content);
-        }
-    }
-    
-    export class StringBuffer {
-        private content;
-        
-        public fun init() {
-            this.content = "";
-        }
-        
-        public fun append(text) {
-            this.content = this.content + native_types_to_string(text);
-            return this;
-        }
-        
-        public fun prepend(text) {
-            this.content = native_types_to_string(text) + this.content;
-            return this;
-        }
-        
-        public fun clear() {
-            this.content = "";
-            return this;
-        }
-        
-        public fun toString() {
-            return this.content;
-        }
-        
-        public fun length() {
-            return native_string_length(this.content);
-        }
-        
-        public fun isEmpty() {
-            return this.content == "";
+        public static fn toString(buffer) {
+            return native_types_to_string(buffer);
         }
     }
 }

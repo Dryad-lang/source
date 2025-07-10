@@ -1,5 +1,0 @@
-class TestClass {
-    static fn test() {
-        print("Static function test")
-    }
-}

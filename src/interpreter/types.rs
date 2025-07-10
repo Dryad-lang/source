@@ -46,6 +46,8 @@ impl TypeChecker {
             Value::String(_) => Type::String,
             Value::Bool(_) => Type::Bool,
             Value::Null => Type::Null,
+            Value::Array(_) => Type::Any, // Arrays are treated as Any for now
+            Value::Object(_) => Type::Any, // Objects are treated as Any for now
             Value::Class(_) => Type::Class,
             Value::Instance(_) => Type::Instance,
             Value::Function { .. } => Type::Function,
@@ -236,6 +238,7 @@ impl TypeChecker {
                     BinaryOp::Sub => "-",
                     BinaryOp::Mul => "*",
                     BinaryOp::Div => "/",
+                    BinaryOp::Mod => "%",
                     BinaryOp::Equal => "==",
                     BinaryOp::NotEqual => "!=",
                     BinaryOp::Less => "<",
@@ -300,6 +303,22 @@ impl TypeChecker {
                 // Verificar a expressão do valor
                 self.check_expression(value, env)
             }
+            Expr::Array(elements) => {
+                // Verificar todos os elementos do array
+                for element in elements {
+                    if let Some(error) = self.check_expression(element, env) {
+                        return Some(error);
+                    }
+                }
+                None
+            }
+            Expr::Index { object, index } => {
+                // Verificar o objeto e o índice
+                if let Some(error) = self.check_expression(object, env) {
+                    return Some(error);
+                }
+                self.check_expression(index, env)
+            }
         }
     }
 
@@ -334,6 +353,7 @@ impl TypeChecker {
                     BinaryOp::Sub => "-",
                     BinaryOp::Mul => "*",
                     BinaryOp::Div => "/",
+                    BinaryOp::Mod => "%",
                     BinaryOp::Equal => "==",
                     BinaryOp::NotEqual => "!=",
                     BinaryOp::Less => "<",
@@ -382,6 +402,14 @@ impl TypeChecker {
             Expr::Assign { name: _, value } => {
                 // O tipo da atribuição é o tipo do valor atribuído
                 self.infer_expression_type(value, env)
+            }
+            Expr::Array(_) => {
+                // Arrays são tratados como Any por enquanto
+                Some(Type::Any)
+            }
+            Expr::Index { object: _, index: _ } => {
+                // Acesso por índice pode retornar qualquer tipo
+                Some(Type::Any)
             }
         }
     }

@@ -1,8 +1,9 @@
 // src/oak/cli_integration.rs
 //! Integração com CLI do Dryad
 
-use std::collections::HashMap;
-use super::{OakManager, OakOptions, OakResult, OakApi};
+use std::fs;
+use std::path::{Path, PathBuf};
+use super::OakApi;
 
 /// Integração do Oak com o CLI do Dryad
 pub struct OakCliIntegration {
@@ -89,13 +90,24 @@ impl OakCliIntegration {
             let project_name = result_json["data"]["name"].as_str().unwrap_or("unknown");
             let config_file = result_json["data"]["config_file"].as_str().unwrap_or("oaklibs.json");
             
+            // Criar oak_modules e copiar bibliotecas padrão
+            let copy_result = self.create_oak_modules();
+            
+            let mut output = format!(
+                "✓ Initialized Oak project '{}'\n✓ Created {}",
+                project_name, config_file
+            );
+            
+            if copy_result.is_ok() {
+                output.push_str("\n✓ Created oak_modules/ directory\n✓ Copied standard libraries to oak_modules/");
+            } else {
+                output.push_str("\n⚠ Warning: Could not copy standard libraries");
+            }
+            
             OakCliResult {
                 success: true,
                 message: "Oak project initialized successfully".to_string(),
-                output: format!(
-                    "✓ Initialized Oak project '{}'\n✓ Created {}\n✓ Created lib/ directory",
-                    project_name, config_file
-                ),
+                output,
                 error: None,
             }
         } else {
@@ -106,6 +118,73 @@ impl OakCliIntegration {
                 error: Some(result_json["message"].as_str().unwrap_or("Unknown error").to_string()),
             }
         }
+    }
+    
+    /// Cria oak_modules e copia bibliotecas padrão
+    fn create_oak_modules(&self) -> Result<(), String> {
+        // Criar diretório oak_modules
+        fs::create_dir_all("oak_modules").map_err(|e| format!("Failed to create oak_modules: {}", e))?;
+        
+        // Encontrar a pasta lib das bibliotecas padrão
+        let lib_sources = vec![
+            "lib",           // Desenvolvimento local
+            "../lib",        // Relativo ao exe
+            "../../lib",     // Outro nível
+        ];
+        
+        let mut lib_path: Option<&str> = None;
+        for source in &lib_sources {
+            if Path::new(source).exists() {
+                lib_path = Some(source);
+                break;
+            }
+        }
+        
+        // Detectar lib próximo ao executável
+        if lib_path.is_none() {
+            if let Ok(exe_path) = std::env::current_exe() {
+                if let Some(exe_dir) = exe_path.parent() {
+                    let exe_lib = exe_dir.join("lib");
+                    if exe_lib.exists() {
+                        // Copiar da localização do exe
+                        self.copy_directory_recursive(&exe_lib, &PathBuf::from("oak_modules"))?;
+                        return Ok(());
+                    }
+                }
+            }
+        }
+        
+        if let Some(source_lib) = lib_path {
+            // Copiar recursivamente lib/ para oak_modules/
+            self.copy_directory_recursive(&PathBuf::from(source_lib), &PathBuf::from("oak_modules"))?;
+            Ok(())
+        } else {
+            Err("Could not find standard library directory".to_string())
+        }
+    }
+    
+    /// Copia um diretório recursivamente
+    fn copy_directory_recursive(&self, source: &Path, dest: &Path) -> Result<(), String> {
+        if !source.exists() {
+            return Err(format!("Source directory does not exist: {}", source.display()));
+        }
+        
+        fs::create_dir_all(dest).map_err(|e| format!("Failed to create destination: {}", e))?;
+        
+        for entry in fs::read_dir(source).map_err(|e| format!("Failed to read source directory: {}", e))? {
+            let entry = entry.map_err(|e| format!("Failed to read entry: {}", e))?;
+            let path = entry.path();
+            let name = entry.file_name();
+            let dest_path = dest.join(&name);
+            
+            if path.is_dir() {
+                self.copy_directory_recursive(&path, &dest_path)?;
+            } else {
+                fs::copy(&path, &dest_path).map_err(|e| format!("Failed to copy file {}: {}", path.display(), e))?;
+            }
+        }
+        
+        Ok(())
     }
 
     /// Manipula comando add
@@ -272,7 +351,7 @@ impl OakCliIntegration {
         } else {
             // Atualizar pacotes específicos
             let mut updated: Vec<String> = Vec::new();
-            let mut failed: Vec<String> = Vec::new();
+            let failed: Vec<String> = Vec::new();
             
             for package in packages {
                 // TODO: Implementar lógica de atualização
@@ -494,6 +573,15 @@ Examples:
   oak lib add ./vendor/libs
   oak run build
 "#.to_string()
+    }
+
+    /// Converte um OakCliResult em erro CLI se não teve sucesso
+    fn to_cli_error(&self, result: &OakCliResult) -> Option<String> {
+        if result.success {
+            None
+        } else {
+            Some(result.message.clone())
+        }
     }
 }
 

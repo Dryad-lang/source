@@ -19,6 +19,8 @@ pub enum Value {
     String(String),
     Bool(bool),
     Null,
+    Array(Vec<Value>),
+    Object(HashMap<String, Value>),
     Class(Rc<Class>),
     Instance(Rc<RefCell<Instance>>),
     Function {
@@ -191,6 +193,8 @@ impl Value {
             Value::Null => false,
             Value::Number(n) => *n != 0.0,
             Value::String(s) => !s.is_empty(),
+            Value::Array(arr) => !arr.is_empty(),
+            Value::Object(obj) => !obj.is_empty(),
             Value::Class(_) => true,
             Value::Instance(_) => true,
             Value::Function { .. } => true,

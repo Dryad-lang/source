@@ -6,3 +6,4 @@ try {
 } catch (e) {
     print(e); // Exception: Erro de teste
 }
+

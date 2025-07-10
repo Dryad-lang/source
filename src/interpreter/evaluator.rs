@@ -3,7 +3,7 @@
 use crate::parser::ast::{Expr, Stmt, BinaryOp, UnaryOp};
 use crate::interpreter::env::{Env, Value, Class, Instance};
 use crate::interpreter::types::TypeChecker;
-use crate::interpreter::errors::{DryadError, ErrorReporter, ErrorSeverity};
+use crate::interpreter::errors::{DryadError, ErrorReporter, ErrorSeverity, ErrorCode};
 use crate::interpreter::module_loader::ModuleLoader;
 use crate::interpreter::native::NativeRegistry;
 use std::rc::Rc;
@@ -51,6 +51,7 @@ impl EvaluationResult {
 }
 
 pub struct Evaluator {
+    #[allow(dead_code)]
     type_checker: TypeChecker,
     error_reporter: ErrorReporter,
     module_loader: ModuleLoader,
@@ -535,7 +536,6 @@ impl Evaluator {
                 }
             }
             
-            // ...existing code...
         }
     }
 
@@ -583,11 +583,7 @@ impl Evaluator {
                         EvaluationResult::with_error(error)
                     }
                 } else {
-                    let error = DryadError::new(
-                        format!("Variável '{}' não definida", name),
-                        Some((0, 0)), // TODO: Adicionar posições reais
-                        ErrorSeverity::Error,
-                    );
+                    let error = DryadError::undefined_variable(name, 0, 0);
                     EvaluationResult::with_error(error)
                 }
             }
@@ -620,22 +616,32 @@ impl Evaluator {
                         // Concatenação bool + string
                         (Value::Bool(a), Value::String(b), BinaryOp::Add) => 
                             EvaluationResult::new(Some(Value::String(a.to_string() + &b))),
+                        // Concatenação string + array
+                        (Value::String(a), Value::Array(_), BinaryOp::Add) => 
+                            EvaluationResult::new(Some(Value::String(a + "[Array]"))),
+                        // Concatenação array + string
+                        (Value::Array(_), Value::String(b), BinaryOp::Add) => 
+                            EvaluationResult::new(Some(Value::String("[Array]".to_string() + &b))),
+                        // Concatenação string + object
+                        (Value::String(a), Value::Object(_), BinaryOp::Add) => 
+                            EvaluationResult::new(Some(Value::String(a + "[Object]"))),
+                        // Concatenação object + string
+                        (Value::Object(_), Value::String(b), BinaryOp::Add) => 
+                            EvaluationResult::new(Some(Value::String("[Object]".to_string() + &b))),
                         (Value::Number(a), Value::Number(b), BinaryOp::Sub) => 
                             EvaluationResult::new(Some(Value::Number(a - b))),
                         (Value::Number(a), Value::Number(b), BinaryOp::Mul) => 
                             EvaluationResult::new(Some(Value::Number(a * b))),
                         (Value::Number(a), Value::Number(b), BinaryOp::Div) => {
                             if b == 0.0 {
-                                let error = DryadError::new(
-                                    "Divisão por zero".to_string(),
-                                    Some((0, 0)), // TODO: Adicionar posições reais
-                                    ErrorSeverity::Error,
-                                );
+                                let error = DryadError::division_by_zero(0, 0);
                                 EvaluationResult::with_error(error)
                             } else {
                                 EvaluationResult::new(Some(Value::Number(a / b)))
                             }
                         }
+                        (Value::Number(a), Value::Number(b), BinaryOp::Mod) => 
+                            EvaluationResult::new(Some(Value::Number(a % b))),
                         (Value::Number(a), Value::Number(b), BinaryOp::Equal) => 
                             EvaluationResult::new(Some(Value::Bool(a == b))),
                         (Value::Number(a), Value::Number(b), BinaryOp::NotEqual) => 
@@ -687,10 +693,10 @@ impl Evaluator {
                         (Value::Null, _, BinaryOp::NotEqual) | (_, Value::Null, BinaryOp::NotEqual) => 
                             EvaluationResult::new(Some(Value::Bool(true))),
                         _ => {
-                            let error = DryadError::new(
-                                format!("Operação binária não suportada: {:?}", op),
-                                Some((0, 0)), // TODO: Adicionar posições reais
-                                ErrorSeverity::Error,
+                            let error = DryadError::with_code(
+                                ErrorCode::E3006,
+                                format!("Type mismatch: unsupported binary operation '{:?}'", op),
+                                Some((0, 0))
                             );
                             EvaluationResult::with_error(error)
                         }
@@ -714,10 +720,10 @@ impl Evaluator {
                             EvaluationResult::new(Some(Value::Number(-n)))
                         }
                         (UnaryOp::Minus, _) => {
-                            let error = DryadError::new(
-                                "Operador unário '-' só pode ser aplicado a números".to_string(),
-                                Some((0, 0)),
-                                ErrorSeverity::Error,
+                            let error = DryadError::with_code(
+                                ErrorCode::E3006,
+                                "Type mismatch: unary '-' operator can only be applied to numbers".to_string(),
+                                Some((0, 0))
                             );
                             EvaluationResult::with_error(error)
                         }
@@ -731,10 +737,10 @@ impl Evaluator {
                 if let Some(this_value) = env.get("this") {
                     EvaluationResult::new(Some(this_value))
                 } else {
-                    let error = DryadError::new(
-                        "Uso de 'this' fora de um contexto de método".to_string(),
-                        Some((0, 0)),
-                        ErrorSeverity::Error,
+                    let error = DryadError::with_code(
+                        ErrorCode::E3015,
+                        "Use of 'this' outside of method context".to_string(),
+                        Some((0, 0))
                     );
                     EvaluationResult::with_error(error)
                 }
@@ -777,10 +783,10 @@ impl Evaluator {
                     
                     EvaluationResult::new(Some(instance_value))
                 } else {
-                    let error = DryadError::new(
-                        format!("Classe '{}' não definida", class),
-                        Some((0, 0)),
-                        ErrorSeverity::Error,
+                    let error = DryadError::with_code(
+                        ErrorCode::E3012,
+                        format!("Class '{}' not found", class),
+                        Some((0, 0))
                     );
                     EvaluationResult::with_error(error)
                 }
@@ -792,30 +798,46 @@ impl Evaluator {
                     return obj_result;
                 }
                 
-                if let Some(Value::Instance(instance_ref)) = obj_result.value {
-                    let instance = instance_ref.borrow();
-                    
-                    // Primeiro tenta acessar campo
-                    if let Some(field_value) = instance.get_field(name) {
-                        EvaluationResult::new(Some(field_value))
-                    } else if let Some(method) = instance.get_method(name) {
-                        // Retorna método bound à instância
-                        EvaluationResult::new(Some(method))
-                    } else {
+                match obj_result.value {
+                    Some(Value::Array(ref arr)) => {
+                        match name.as_str() {
+                            "length" => EvaluationResult::new(Some(Value::Number(arr.len() as f64))),
+                            _ => {
+                                let error = DryadError::new(
+                                    format!("Propriedade '{}' não encontrada em array", name),
+                                    Some((0, 0)),
+                                    ErrorSeverity::Error,
+                                );
+                                EvaluationResult::with_error(error)
+                            }
+                        }
+                    }
+                    Some(Value::Instance(instance_ref)) => {
+                        let instance = instance_ref.borrow();
+                        
+                        // Primeiro tenta acessar campo
+                        if let Some(field_value) = instance.get_field(name) {
+                            EvaluationResult::new(Some(field_value))
+                        } else if let Some(method) = instance.get_method(name) {
+                            // Retorna método bound à instância
+                            EvaluationResult::new(Some(method))
+                        } else {
+                            let error = DryadError::new(
+                                format!("Propriedade '{}' não encontrada", name),
+                                Some((0, 0)),
+                                ErrorSeverity::Error,
+                            );
+                            EvaluationResult::with_error(error)
+                        }
+                    }
+                    _ => {
                         let error = DryadError::new(
-                            format!("Propriedade '{}' não encontrada", name),
+                            "Tentativa de acessar propriedade em valor não-objeto".to_string(),
                             Some((0, 0)),
                             ErrorSeverity::Error,
                         );
                         EvaluationResult::with_error(error)
                     }
-                } else {
-                    let error = DryadError::new(
-                        "Tentativa de acessar propriedade em valor não-objeto".to_string(),
-                        Some((0, 0)),
-                        ErrorSeverity::Error,
-                    );
-                    EvaluationResult::with_error(error)
                 }
             }
             
@@ -859,7 +881,65 @@ impl Evaluator {
                 }
             }
             
-            // ...existing code...
+            Expr::Array(elements) => {
+                let mut array_values = Vec::new();
+                for element in elements {
+                    let element_result = self.eval_expr(element, env);
+                    if !element_result.errors.is_empty() {
+                        return element_result;
+                    }
+                    if let Some(val) = element_result.value {
+                        array_values.push(val);
+                    }
+                }
+                EvaluationResult::new(Some(Value::Array(array_values)))
+            }
+            
+            Expr::Index { object, index } => {
+                let obj_result = self.eval_expr(object, env);
+                if !obj_result.errors.is_empty() {
+                    return obj_result;
+                }
+                
+                let index_result = self.eval_expr(index, env);
+                if !index_result.errors.is_empty() {
+                    return index_result;
+                }
+                
+                if let (Some(Value::Array(arr)), Some(Value::Number(idx))) = 
+                    (obj_result.value, index_result.value) {
+                    // Verificar se o índice é válido
+                    if idx < 0.0 {
+                        let error = DryadError::with_code(
+                            ErrorCode::E3022,
+                            format!("Invalid array index: {} (negative indices not allowed)", idx),
+                            Some((0, 0))
+                        );
+                        return EvaluationResult::with_error(error);
+                    }
+                    
+                    let index = idx as usize;
+                    if index < arr.len() {
+                        EvaluationResult::new(Some(arr[index].clone()))
+                    } else {
+                        let error = DryadError::array_index_out_of_bounds(
+                            index as i32, 
+                            arr.len(), 
+                            0, 
+                            0
+                        );
+                        EvaluationResult::with_error(error)
+                    }
+                } else {
+                    let error = DryadError::with_code(
+                        ErrorCode::E3020,
+                        "Invalid array operation: can only index arrays with numbers".to_string(),
+                        Some((0, 0))
+                    );
+                    EvaluationResult::with_error(error)
+                }
+            }
+            
         }
     }
     
@@ -894,10 +974,10 @@ impl Evaluator {
                             // Chamar método estático
                             if let Value::Function { params, body, is_static, .. } = static_method {
                                 if !is_static {
-                                    let error = DryadError::new(
-                                        format!("Método '{}' não é estático", method_name),
-                                        Some((0, 0)),
-                                        ErrorSeverity::Error,
+                                    let error = DryadError::with_code(
+                                        ErrorCode::E3018,
+                                        format!("Method '{}' is not static", method_name),
+                                        Some((0, 0))
                                     );
                                     return EvaluationResult::with_error(error);
                                 }
@@ -916,19 +996,19 @@ impl Evaluator {
                             }
                         }
                         
-                        let error = DryadError::new(
-                            format!("Método estático '{}' não encontrado na classe '{}.{}'", method_name, namespace_name, class_name),
-                            Some((0, 0)),
-                            ErrorSeverity::Error,
+                        let error = DryadError::with_code(
+                            ErrorCode::E3013,
+                            format!("Static method '{}' not found in class '{}.{}'", method_name, namespace_name, class_name),
+                            Some((0, 0))
                         );
                         return EvaluationResult::with_error(error);
                     }
                 }
                 
-                let error = DryadError::new(
-                    format!("Classe '{}.{}' não encontrada", namespace_name, class_name),
-                    Some((0, 0)),
-                    ErrorSeverity::Error,
+                let error = DryadError::with_code(
+                    ErrorCode::E6001,
+                    format!("Class '{}.{}' not found", namespace_name, class_name),
+                    Some((0, 0))
                 );
                 return EvaluationResult::with_error(error);
             }
@@ -941,6 +1021,207 @@ impl Evaluator {
                 // Verificar se obj_name é uma variável (não um namespace)
                 if let Some(obj_value) = env.get(obj_name) {
                     match obj_value {
+                        // Chamada de método em um array
+                        Value::Array(mut arr) => {
+                            match method_name {
+                                "length" => {
+                                    return EvaluationResult::new(Some(Value::Number(arr.len() as f64)));
+                                }
+                                "push" => {
+                                    // Avaliar argumentos
+                                    for arg in args {
+                                        let arg_result = self.eval_expr(arg, env);
+                                        if !arg_result.errors.is_empty() {
+                                            return arg_result;
+                                        }
+                                        if let Some(val) = arg_result.value {
+                                            arr.push(val);
+                                        }
+                                    }
+                                    env.set(obj_name.to_string(), Value::Array(arr.clone()));
+                                    return EvaluationResult::new(Some(Value::Number(arr.len() as f64)));
+                                }
+                                "pop" => {
+                                    if let Some(val) = arr.pop() {
+                                        env.set(obj_name.to_string(), Value::Array(arr));
+                                        return EvaluationResult::new(Some(val));
+                                    } else {
+                                        return EvaluationResult::new(Some(Value::Null));
+                                    }
+                                }
+                                "find" => {
+                                    if let Some(search_arg) = args.get(0) {
+                                        let search_result = self.eval_expr(search_arg, env);
+                                        if !search_result.errors.is_empty() {
+                                            return search_result;
+                                        }
+                                        if let Some(search_val) = search_result.value {
+                                            for (i, item) in arr.iter().enumerate() {
+                                                if self.values_equal(item, &search_val) {
+                                                    return EvaluationResult::new(Some(Value::Number(i as f64)));
+                                                }
+                                            }
+                                            return EvaluationResult::new(Some(Value::Number(-1.0)));
+                                        }
+                                    }
+                                    return EvaluationResult::new(Some(Value::Number(-1.0)));
+                                }
+                                "sort" => {
+                                    // Implementação simples de sort para números
+                                    let mut sorted_arr = arr.clone();
+                                    sorted_arr.sort_by(|a, b| {
+                                        match (a, b) {
+                                            (Value::Number(a), Value::Number(b)) => a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal),
+                                            (Value::String(a), Value::String(b)) => a.cmp(b),
+                                            _ => std::cmp::Ordering::Equal,
+                                        }
+                                    });
+                                    env.set(obj_name.to_string(), Value::Array(sorted_arr.clone()));
+                                    return EvaluationResult::new(Some(Value::Array(sorted_arr)));
+                                }
+                                "sum" => {
+                                    let mut sum = 0.0;
+                                    for item in &arr {
+                                        if let Value::Number(n) = item {
+                                            sum += n;
+                                        }
+                                    }
+                                    return EvaluationResult::new(Some(Value::Number(sum)));
+                                }
+                                "mean" => {
+                                    if arr.is_empty() {
+                                        return EvaluationResult::new(Some(Value::Number(0.0)));
+                                    }
+                                    let mut sum = 0.0;
+                                    let mut count = 0;
+                                    for item in &arr {
+                                        if let Value::Number(n) = item {
+                                            sum += n;
+                                            count += 1;
+                                        }
+                                    }
+                                    if count > 0 {
+                                        return EvaluationResult::new(Some(Value::Number(sum / count as f64)));
+                                    } else {
+                                        return EvaluationResult::new(Some(Value::Number(0.0)));
+                                    }
+                                }
+                                "slice" => {
+                                    let start = if let Some(start_arg) = args.get(0) {
+                                        if let Some(Value::Number(n)) = self.eval_expr(start_arg, env).value {
+                                            (n as usize).min(arr.len())
+                                        } else {
+                                            0
+                                        }
+                                    } else {
+                                        0
+                                    };
+                                    
+                                    let end = if let Some(end_arg) = args.get(1) {
+                                        if let Some(Value::Number(n)) = self.eval_expr(end_arg, env).value {
+                                            (n as usize).min(arr.len())
+                                        } else {
+                                            arr.len()
+                                        }
+                                    } else {
+                                        arr.len()
+                                    };
+                                    
+                                    if start <= end && start < arr.len() {
+                                        let sliced = arr[start..end].to_vec();
+                                        return EvaluationResult::new(Some(Value::Array(sliced)));
+                                    } else {
+                                        return EvaluationResult::new(Some(Value::Array(vec![])));
+                                    }
+                                }
+                                "join" => {
+                                    let separator = if let Some(sep_arg) = args.get(0) {
+                                        if let Some(Value::String(s)) = self.eval_expr(sep_arg, env).value {
+                                            s
+                                        } else {
+                                            ",".to_string()
+                                        }
+                                    } else {
+                                        ",".to_string()
+                                    };
+                                    
+                                    let joined = arr.iter()
+                                        .map(|v| match v {
+                                            Value::String(s) => s.clone(),
+                                            Value::Number(n) => n.to_string(),
+                                            Value::Bool(b) => b.to_string(),
+                                            _ => "null".to_string(),
+                                        })
+                                        .collect::<Vec<String>>()
+                                        .join(&separator);
+                                    
+                                    return EvaluationResult::new(Some(Value::String(joined)));
+                                }
+                                "reverse" => {
+                                    let mut reversed = arr.clone();
+                                    reversed.reverse();
+                                    env.set(obj_name.to_string(), Value::Array(reversed.clone()));
+                                    return EvaluationResult::new(Some(Value::Array(reversed)));
+                                }
+                                "indexOf" => {
+                                    if let Some(search_arg) = args.get(0) {
+                                        let search_result = self.eval_expr(search_arg, env);
+                                        if !search_result.errors.is_empty() {
+                                            return search_result;
+                                        }
+                                        if let Some(search_val) = search_result.value {
+                                            for (i, item) in arr.iter().enumerate() {
+                                                if self.values_equal(item, &search_val) {
+                                                    return EvaluationResult::new(Some(Value::Number(i as f64)));
+                                                }
+                                            }
+                                        }
+                                    }
+                                    return EvaluationResult::new(Some(Value::Number(-1.0)));
+                                }
+                                "lastIndexOf" => {
+                                    if let Some(search_arg) = args.get(0) {
+                                        let search_result = self.eval_expr(search_arg, env);
+                                        if !search_result.errors.is_empty() {
+                                            return search_result;
+                                        }
+                                        if let Some(search_val) = search_result.value {
+                                            for (i, item) in arr.iter().enumerate().rev() {
+                                                if self.values_equal(item, &search_val) {
+                                                    return EvaluationResult::new(Some(Value::Number(i as f64)));
+                                                }
+                                            }
+                                        }
+                                    }
+                                    return EvaluationResult::new(Some(Value::Number(-1.0)));
+                                }
+                                "includes" => {
+                                    if let Some(search_arg) = args.get(0) {
+                                        let search_result = self.eval_expr(search_arg, env);
+                                        if !search_result.errors.is_empty() {
+                                            return search_result;
+                                        }
+                                        if let Some(search_val) = search_result.value {
+                                            for item in &arr {
+                                                if self.values_equal(item, &search_val) {
+                                                    return EvaluationResult::new(Some(Value::Bool(true)));
+                                                }
+                                            }
+                                        }
+                                    }
+                                    return EvaluationResult::new(Some(Value::Bool(false)));
+                                }
+                                _ => {
+                                    let error = DryadError::array_method_not_found(
+                                        method_name,
+                                        0,
+                                        0
+                                    );
+                                    return EvaluationResult::with_error(error);
+                                }
+                            }
+                        }
+                        
                         // Chamada de método estático em uma classe
                         Value::Class(class_ref) => {
                             if let Some(static_method) = class_ref.get_static_method(method_name) {
@@ -1009,10 +1290,10 @@ impl Evaluator {
                                 // Chamar método com this binding
                                 if let Value::Function { params, body, is_static, .. } = method_value {
                                     if is_static {
-                                        let error = DryadError::new(
-                                            format!("Não é possível chamar método estático '{}' em uma instância", method_name),
-                                            Some((0, 0)),
-                                            ErrorSeverity::Error,
+                                        let error = DryadError::with_code(
+                                            ErrorCode::E3019,
+                                            format!("Cannot call static method '{}' on an instance", method_name),
+                                            Some((0, 0))
                                         );
                                         return EvaluationResult::with_error(error);
                                     }
@@ -1030,11 +1311,7 @@ impl Evaluator {
                                     return self.eval_stmt(&body, &mut method_env);
                                 }
                             } else {
-                                let error = DryadError::new(
-                                    format!("Método '{}' não encontrado", method_name),
-                                    Some((0, 0)),
-                                    ErrorSeverity::Error,
-                                );
+                                let error = DryadError::method_not_found(method_name, "instance", 0, 0);
                                 return EvaluationResult::with_error(error);
                             }
                         }
@@ -1149,11 +1426,7 @@ impl Evaluator {
                 if let Some(func_value) = env.resolve_namespace_path(function) {
                     self.call_resolved_function(func_value, args, env)
                 } else {
-                    let error = DryadError::new(
-                        format!("Função '{}' não encontrada", function),
-                        Some((0, 0)),
-                        ErrorSeverity::Error,
-                    );
+                    let error = DryadError::function_not_found(function, 0, 0);
                     EvaluationResult::with_error(error)
                 }
             }
@@ -1342,6 +1615,16 @@ impl Evaluator {
     pub fn report_errors(&mut self, errors: &[DryadError]) {
         for error in errors {
             self.error_reporter.report_error(error);
+        }
+    }
+    
+    fn values_equal(&self, a: &Value, b: &Value) -> bool {
+        match (a, b) {
+            (Value::Number(a), Value::Number(b)) => (a - b).abs() < f64::EPSILON,
+            (Value::String(a), Value::String(b)) => a == b,
+            (Value::Bool(a), Value::Bool(b)) => a == b,
+            (Value::Null, Value::Null) => true,
+            _ => false,
         }
     }
 }

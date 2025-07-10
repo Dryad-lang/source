@@ -6,8 +6,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use serde_json::{json, Value};
 
-use crate::interpreter::errors::{DryadError, ErrorSeverity};
-use super::config::{OakConfig, OakDependency, OakPackage};
+use crate::interpreter::errors::DryadError;
+use super::config::{OakConfig, OakDependency};
 use super::registry::{PackageRegistry, LocalRegistry};
 use super::resolver::DependencyResolver;
 

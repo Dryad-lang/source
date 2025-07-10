@@ -1,4 +1,0 @@
-// Versão debug simples de uma classe
-class TestClass {
-    test: String;
-}

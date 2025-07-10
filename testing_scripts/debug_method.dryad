@@ -1,5 +1,0 @@
-class TestClass {
-    fn test() {
-        print("Non-static method test")
-    }
-}

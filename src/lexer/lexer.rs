@@ -9,6 +9,8 @@ pub struct Lexer {
 
 impl Lexer {
     pub fn new(input: &str) -> Self {
+        eprintln!("DEBUG: Creating lexer with input: '{}'", input);
+        eprintln!("DEBUG: Input length: {}", input.len());
         Self {
             input: input.chars().collect(),
             current: 0,
@@ -19,16 +21,19 @@ impl Lexer {
         self.skip_whitespace();
 
         if self.is_at_end() {
+            eprintln!("DEBUG: Lexer reached end of input");
             return Token::Eof;
         }
 
         let c = self.advance();
+        eprintln!("DEBUG: Lexer processing character: '{}'", c);
 
         match c {
             '+' => Token::Plus,
             '-' => Token::Minus,
             '*' => Token::Star,
             '/' => Token::Slash,
+            '%' => Token::Mod,
             '=' => {
                 if self.match_char('=') {
                     Token::EqualEqual
@@ -61,13 +66,21 @@ impl Lexer {
             ')' => Token::RParen,
             '{' => Token::LBrace,
             '}' => Token::RBrace,
+            '[' => {
+                eprintln!("DEBUG: Found opening bracket!");
+                Token::LBracket
+            }
+            ']' => Token::RBracket,
             ',' => Token::Comma,
             ';' => Token::Semicolon,
             '.' => Token::Dot,
             '"' => self.read_string(),
             ch if ch.is_ascii_digit() => self.read_number(ch),
             ch if Self::is_identifier_start(ch) => self.read_identifier(ch),
-            _ => self.next_token(), // ignora caractere inválido
+            _ => {
+                eprintln!("DEBUG: Unknown character '{}' at position {}", c, self.current - 1);
+                Token::Eof // Retorna EOF em vez de recursão infinita
+            }
         }
     }
 
@@ -146,6 +159,7 @@ impl Lexer {
         match ident.as_str() {
             "let" => Token::Let,
             "fun" => Token::Fun,
+            "fn" => Token::Fun, // "fn" is an alias for "fun"
             "if" => Token::If,
             "else" => Token::Else,
             "for" => Token::For,

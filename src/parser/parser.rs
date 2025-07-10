@@ -3,21 +3,46 @@
 use crate::lexer::tokenizer::Lexer;
 use crate::lexer::token::Token;
 use crate::parser::ast::{Expr, Stmt, BinaryOp, UnaryOp, Visibility, FieldDecl};
+use crate::interpreter::errors::{DryadError, ErrorCode};
 
 pub struct Parser {
     lexer: Lexer,
     current: Token,
     peek: Token,
+    errors: Vec<DryadError>,
+    current_line: usize,
+    current_column: usize,
 }
 
 impl Parser {
     pub fn new(mut lexer: Lexer) -> Self {
         let current = lexer.next_token();
         let peek = lexer.next_token();
-        Self { lexer, current, peek }
+        Self { 
+            lexer, 
+            current, 
+            peek,
+            errors: Vec::new(),
+            current_line: 1,
+            current_column: 1,
+        }
+    }
+    
+    pub fn get_errors(&self) -> &[DryadError] {
+        &self.errors
+    }
+    
+    fn add_error(&mut self, code: ErrorCode, message: String) {
+        let error = DryadError::with_code(code, message, Some((self.current_line, self.current_column)));
+        self.errors.push(error);
     }
 
     fn advance(&mut self) {
+        // Update position tracking based on current token (simplified)
+        if let Token::Identifier(_) = &self.current {
+            self.current_column += 1; // Simplified tracking
+        }
+        
         self.current = std::mem::replace(&mut self.peek, self.lexer.next_token());
     }
 
@@ -30,6 +55,16 @@ impl Parser {
             self.advance();
             true
         } else {
+            false
+        }
+    }
+
+    fn expect(&mut self, expected_token: &Token, error_code: ErrorCode, error_msg: &str) -> bool {
+        if self.check(expected_token) {
+            self.advance();
+            true
+        } else {
+            self.add_error(error_code, error_msg.to_string());
             false
         }
     }
@@ -112,18 +147,25 @@ impl Parser {
             let name = name.clone();
             self.advance();
 
-            if self.current != Token::Equal {
+            if !self.expect(&Token::Equal, ErrorCode::E2002, "Expected '=' after variable name in let declaration") {
                 return None;
             }
-            self.advance(); // consume '='
 
-            let expr = self.parse_expression()?;
+            let expr = match self.parse_expression() {
+                Some(expr) => expr,
+                None => {
+                    self.add_error(ErrorCode::E2007, "Expected expression after '=' in let declaration".to_string());
+                    return None;
+                }
+            };
+            
             // Consumir ponto e vírgula apenas se solicitado
             if consume_semicolon {
                 self.matches(&Token::Semicolon);
             }
             Some(Stmt::Let { name, value: expr })
         } else {
+            self.add_error(ErrorCode::E2011, "Expected identifier after 'let'".to_string());
             None
         }
     }
@@ -131,22 +173,38 @@ impl Parser {
     fn parse_if(&mut self) -> Option<Stmt> {
         self.advance(); // consume 'if'
         
-        if !self.check(&Token::LParen) {
+        if !self.expect(&Token::LParen, ErrorCode::E2005, "Expected '(' after 'if'") {
             return None;
         }
-        self.advance(); // consume '('
         
-        let cond = self.parse_expression()?;
+        let cond = match self.parse_expression() {
+            Some(expr) => expr,
+            None => {
+                self.add_error(ErrorCode::E2017, "Expected condition expression in if statement".to_string());
+                return None;
+            }
+        };
         
-        if !self.check(&Token::RParen) {
+        if !self.expect(&Token::RParen, ErrorCode::E2005, "Expected ')' after if condition") {
             return None;
         }
-        self.advance(); // consume ')'
         
-        let then_branch = Box::new(self.parse_statement()?);
+        let then_branch = match self.parse_statement() {
+            Some(stmt) => Box::new(stmt),
+            None => {
+                self.add_error(ErrorCode::E2017, "Expected statement after if condition".to_string());
+                return None;
+            }
+        };
         
         let else_branch = if self.matches(&Token::Else) {
-            Some(Box::new(self.parse_statement()?))
+            match self.parse_statement() {
+                Some(stmt) => Some(Box::new(stmt)),
+                None => {
+                    self.add_error(ErrorCode::E2017, "Expected statement after 'else'".to_string());
+                    return None;
+                }
+            }
         } else {
             None
         };
@@ -157,19 +215,29 @@ impl Parser {
     fn parse_while(&mut self) -> Option<Stmt> {
         self.advance(); // consume 'while'
         
-        if !self.check(&Token::LParen) {
+        if !self.expect(&Token::LParen, ErrorCode::E2005, "Expected '(' after 'while'") {
             return None;
         }
-        self.advance(); // consume '('
         
-        let cond = self.parse_expression()?;
+        let cond = match self.parse_expression() {
+            Some(expr) => expr,
+            None => {
+                self.add_error(ErrorCode::E2018, "Expected condition expression in while loop".to_string());
+                return None;
+            }
+        };
         
-        if !self.check(&Token::RParen) {
+        if !self.expect(&Token::RParen, ErrorCode::E2005, "Expected ')' after while condition") {
             return None;
         }
-        self.advance(); // consume ')'
         
-        let body = Box::new(self.parse_statement()?);
+        let body = match self.parse_statement() {
+            Some(stmt) => Box::new(stmt),
+            None => {
+                self.add_error(ErrorCode::E2018, "Expected statement in while loop body".to_string());
+                return None;
+            }
+        };
 
         Some(Stmt::While { cond, body })
     }
@@ -252,14 +320,14 @@ impl Parser {
             if let Some(stmt) = self.parse_statement() {
                 statements.push(stmt);
             } else {
-                break;
+                // Skip invalid token and continue
+                self.advance();
             }
         }
         
-        if !self.check(&Token::RBrace) {
+        if !self.expect(&Token::RBrace, ErrorCode::E2004, "Expected '}' to close block") {
             return None;
         }
-        self.advance(); // consume '}'
         
         Some(Stmt::Block(statements))
     }
@@ -375,6 +443,7 @@ impl Parser {
             let op = match &self.current {
                 Token::Star => BinaryOp::Mul,
                 Token::Slash => BinaryOp::Div,
+                Token::Mod => BinaryOp::Mod,
                 _ => unreachable!(),
             };
             self.advance();
@@ -489,6 +558,7 @@ impl Parser {
                     }
                     
                     if self.current != Token::RParen {
+                        self.add_error(ErrorCode::E2005, "Expected ')' after function arguments".to_string());
                         return None;
                     }
                     self.advance(); // consume ')'
@@ -503,67 +573,119 @@ impl Parser {
             }
             Token::LParen => {
                 self.advance(); // consume '('
-                let expr = self.parse_expression()?;
-                if self.current != Token::RParen {
+                let expr = match self.parse_expression() {
+                    Some(expr) => expr,
+                    None => {
+                        self.add_error(ErrorCode::E2007, "Expected expression inside parentheses".to_string());
+                        return None;
+                    }
+                };
+                if !self.expect(&Token::RParen, ErrorCode::E2005, "Expected ')' after expression") {
                     return None;
                 }
-                self.advance(); // consume ')'
                 Some(expr)
+            }
+            Token::LBracket => {
+                self.advance(); // consume '['
+                let mut elements = Vec::new();
+                
+                // Se não é ']', então há elementos
+                if !self.check(&Token::RBracket) {
+                    loop {
+                        // Parse a single element using unary level to avoid expression issues
+                        if let Some(expr) = self.parse_unary() {
+                            elements.push(expr);
+                        } else {
+                            return None;
+                        }
+                        
+                        // Se há vírgula, continua para próximo elemento
+                        if self.matches(&Token::Comma) {
+                            // Se há vírgula mas o próximo token é ']', é um trailing comma válido
+                            if self.check(&Token::RBracket) {
+                                break;
+                            }
+                            continue;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+                
+                // Consume ']'
+                if !self.expect(&Token::RBracket, ErrorCode::E2006, "Expected ']' to close array literal") {
+                    return None;
+                }
+                
+                Some(Expr::Array(elements))
             }
             _ => None,
         }?;
 
-        // Handle member access (dot notation)
-        while self.matches(&Token::Dot) {
-            match &self.current {
-                Token::Identifier(name) => {
-                    let member_name = name.clone();
-                    self.advance();
-                    
-                    // Check if it's a method call
-                    if self.matches(&Token::LParen) {
-                        let mut args = Vec::new();
+        // Handle member access (dot notation) and array indexing
+        loop {
+            if self.matches(&Token::Dot) {
+                match &self.current {
+                    Token::Identifier(name) => {
+                        let member_name = name.clone();
+                        self.advance();
                         
-                        if !self.check(&Token::RParen) {
-                            loop {
-                                args.push(self.parse_expression()?);
-                                if self.matches(&Token::Comma) {
-                                    continue;
-                                } else {
-                                    break;
+                        // Check if it's a method call
+                        if self.matches(&Token::LParen) {
+                            let mut args = Vec::new();
+                            
+                            if !self.check(&Token::RParen) {
+                                loop {
+                                    args.push(self.parse_expression()?);
+                                    if self.matches(&Token::Comma) {
+                                        continue;
+                                    } else {
+                                        break;
+                                    }
                                 }
                             }
+                            
+                            if !self.matches(&Token::RParen) {
+                                return None;
+                            }
+                            
+                            expr = Expr::Call {
+                                function: format!("{}.{}", 
+                                    match &expr {
+                                        Expr::Identifier(n) => n.clone(),
+                                        _ => "object".to_string(),
+                                    }
+                                , member_name),
+                                args,
+                            };
+                        } else {
+                            // Usar Get para member access em variáveis
+                            expr = Expr::Get {
+                                object: Box::new(expr),
+                                name: member_name,
+                            };
                         }
-                        
-                        if !self.matches(&Token::RParen) {
-                            return None;
-                        }
-                        
-                        expr = Expr::Call {
-                            function: format!("{}.{}", 
-                                match &expr {
-                                    Expr::Identifier(n) => n.clone(),
-                                    _ => "object".to_string(),
-                                }
-                            , member_name),
-                            args,
-                        };
-                    } else {
-                        // Para namespace paths, criar identifier com nome completo
-                        let full_name = match &expr {
-                            Expr::Identifier(n) => format!("{}.{}", n, member_name),
-                            _ => member_name,
-                        };
-                        expr = Expr::Identifier(full_name);
                     }
+                    _ => break,
                 }
-                _ => break,
+            } else if self.matches(&Token::LBracket) {
+                let index = self.parse_expression()?;
+                if !self.matches(&Token::RBracket) {
+                    return None;
+                }
+                expr = Expr::Index {
+                    object: Box::new(expr),
+                    index: Box::new(index),
+                };
+            } else {
+                break;
             }
         }
 
         Some(expr)
     }
 
+    #[allow(dead_code)]
     fn parse_visibility(&mut self) -> Visibility {
         match &self.current {
             Token::Public => {
@@ -691,10 +813,13 @@ impl Parser {
                 self.advance();
                 func_name
             },
-            _ => return None,
+            _ => {
+                self.add_error(ErrorCode::E2012, "Expected function name after 'function'".to_string());
+                return None;
+            }
         };
 
-        if !self.matches(&Token::LParen) {
+        if !self.expect(&Token::LParen, ErrorCode::E2013, "Expected '(' after function name") {
             return None;
         }
 
@@ -707,7 +832,10 @@ impl Parser {
                         params.push(param.clone());
                         self.advance();
                     },
-                    _ => return None,
+                    _ => {
+                        self.add_error(ErrorCode::E2014, "Expected parameter name in function".to_string());
+                        return None;
+                    }
                 }
                 
                 if self.matches(&Token::Comma) {
@@ -718,13 +846,16 @@ impl Parser {
             }
         }
 
-        if !self.matches(&Token::RParen) {
+        if !self.expect(&Token::RParen, ErrorCode::E2013, "Expected ')' after function parameters") {
             return None;
         }
 
         let body = match self.parse_block() {
             Some(body) => Box::new(body),
-            None => return None,
+            None => {
+                self.add_error(ErrorCode::E2009, "Expected function body after parameters".to_string());
+                return None;
+            }
         };
 
         Some(Stmt::FunDecl {
@@ -745,10 +876,13 @@ impl Parser {
                 self.advance();
                 func_name
             },
-            _ => return None,
+            _ => {
+                self.add_error(ErrorCode::E2012, "Expected function name after 'function'".to_string());
+                return None;
+            }
         };
 
-        if !self.matches(&Token::LParen) {
+        if !self.expect(&Token::LParen, ErrorCode::E2013, "Expected '(' after function name") {
             return None;
         }
 
@@ -761,7 +895,10 @@ impl Parser {
                         params.push(param.clone());
                         self.advance();
                     },
-                    _ => return None,
+                    _ => {
+                        self.add_error(ErrorCode::E2014, "Expected parameter name in function".to_string());
+                        return None;
+                    }
                 }
                 
                 if self.matches(&Token::Comma) {
@@ -772,13 +909,16 @@ impl Parser {
             }
         }
 
-        if !self.matches(&Token::RParen) {
+        if !self.expect(&Token::RParen, ErrorCode::E2013, "Expected ')' after function parameters") {
             return None;
         }
 
         let body = match self.parse_block() {
             Some(body) => Box::new(body),
-            None => return None,
+            None => {
+                self.add_error(ErrorCode::E2009, "Expected function body after parameters".to_string());
+                return None;
+            }
         };
 
         Some(Stmt::FunDecl {
@@ -858,7 +998,7 @@ impl Parser {
         let mut module_path = String::new();
         
         if let Token::Identifier(first_part) = &self.current {
-            module_path = first_part.clone();
+            module_path.push_str(first_part);
             self.advance();
             
             // Parse additional dot-separated parts

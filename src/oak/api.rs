@@ -4,9 +4,9 @@
 use std::ffi::{CString, CStr};
 use std::os::raw::c_char;
 use std::path::PathBuf;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
-use super::{OakManager, OakOptions, OakResult, OakError, OakErrorCode};
+use super::{OakManager, OakOptions};
 
 /// API principal do Oak para integração externa
 pub struct OakApi {
@@ -172,7 +172,7 @@ pub extern "C" fn oak_api_create() -> *mut OakApi {
 pub extern "C" fn oak_api_destroy(api: *mut OakApi) {
     if !api.is_null() {
         unsafe {
-            Box::from_raw(api);
+            let _ = Box::from_raw(api);
         }
     }
 }
@@ -373,7 +373,7 @@ pub extern "C" fn oak_api_run_script(
 pub extern "C" fn oak_api_free_string(s: *mut c_char) {
     if !s.is_null() {
         unsafe {
-            CString::from_raw(s);
+            let _ = CString::from_raw(s);
         }
     }
 }
@@ -382,94 +382,6 @@ pub extern "C" fn oak_api_free_string(s: *mut c_char) {
 #[no_mangle]
 pub extern "C" fn oak_api_get_version() -> *mut c_char {
     ExternalApi::string_to_c_str(crate::oak::OAK_VERSION.to_string())
-}
-
-/// Wrapper para JavaScript/Node.js usando napi
-#[cfg(feature = "napi")]
-pub mod napi_bindings {
-    use napi::bindgen_prelude::*;
-    use napi_derive::napi;
-    use super::*;
-
-    #[napi]
-    pub struct NodeOakApi {
-        inner: OakApi,
-    }
-
-    #[napi]
-    impl NodeOakApi {
-        #[napi(constructor)]
-        pub fn new() -> Self {
-            Self {
-                inner: OakApi::new(),
-            }
-        }
-
-        #[napi]
-        pub fn init_project(&self, name: Option<String>, description: Option<String>) -> String {
-            let result = self.inner.init_project(name, description);
-            serde_json::to_string(&result).unwrap_or_else(|_| "{}".to_string())
-        }
-
-        #[napi]
-        pub fn add_dependency(&self, name: String, version: Option<String>, is_dev: Option<bool>) -> String {
-            let result = self.inner.add_dependency(name, version, is_dev.unwrap_or(false));
-            serde_json::to_string(&result).unwrap_or_else(|_| "{}".to_string())
-        }
-
-        #[napi]
-        pub fn remove_dependency(&self, name: String) -> String {
-            let result = self.inner.remove_dependency(name);
-            serde_json::to_string(&result).unwrap_or_else(|_| "{}".to_string())
-        }
-
-        #[napi]
-        pub fn list_dependencies(&self, include_dev: Option<bool>) -> String {
-            let result = self.inner.list_dependencies(include_dev.unwrap_or(true));
-            serde_json::to_string(&result).unwrap_or_else(|_| "{}".to_string())
-        }
-
-        #[napi]
-        pub fn install_dependencies(&self) -> String {
-            let result = self.inner.install_dependencies();
-            serde_json::to_string(&result).unwrap_or_else(|_| "{}".to_string())
-        }
-
-        #[napi]
-        pub fn get_project_info(&self) -> String {
-            let result = self.inner.get_project_info();
-            serde_json::to_string(&result).unwrap_or_else(|_| "{}".to_string())
-        }
-
-        #[napi]
-        pub fn validate_config(&self) -> String {
-            let result = self.inner.validate_config();
-            serde_json::to_string(&result).unwrap_or_else(|_| "{}".to_string())
-        }
-
-        #[napi]
-        pub fn project_exists(&self) -> bool {
-            self.inner.project_exists()
-        }
-
-        #[napi]
-        pub fn add_lib_path(&self, path: String) -> String {
-            let result = self.inner.add_lib_path(path);
-            serde_json::to_string(&result).unwrap_or_else(|_| "{}".to_string())
-        }
-
-        #[napi]
-        pub fn remove_lib_path(&self, path: String) -> String {
-            let result = self.inner.remove_lib_path(path);
-            serde_json::to_string(&result).unwrap_or_else(|_| "{}".to_string())
-        }
-
-        #[napi]
-        pub fn run_script(&self, script_name: String) -> String {
-            let result = self.inner.run_script(script_name);
-            serde_json::to_string(&result).unwrap_or_else(|_| "{}".to_string())
-        }
-    }
 }
 
 #[cfg(test)]

@@ -36,14 +36,14 @@ namespace IO {
             return Console.print(message);
         }
         
-        // Métodos utilitários
+        // Função para limpar console
         public static fn clear() {
-            // Clear console (implementação futura)
             return native_console_clear();
         }
-        
-        public static fn newLine() {
-            return native_console_println();
+
+        // Função para ler com prompt personalizado
+        public static fn prompt(message) {
+            return native_console_input(message);
         }
     }
 }

@@ -10,7 +10,7 @@
 
 use std::process::Command;
 use std::fs;
-use std::io::Write;
+// use std::io::Write; // As currently not used, commented to not trigger unused warnings
 
 #[cfg(test)]
 mod cli_tests {
@@ -88,7 +88,10 @@ mod cli_tests {
 #[cfg(test)]
 mod repl_tests {
     use super::*;
-    use std::io::{BufRead, BufReader};
+    use std::io::{
+        // BufRead, // Commented out as not used to not trigger unused warnings
+        
+        BufReader};
     use std::process::{Stdio, Child};
 
     fn start_repl() -> std::io::Result<Child> {
