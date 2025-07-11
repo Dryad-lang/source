@@ -2,7 +2,7 @@
 
 ![Dryad Logo](https://img.shields.io/badge/Dryad-v0.1.0-green)
 ![Oak Package Manager](https://img.shields.io/badge/Oak-Modular-blue)
-![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen)
+[![Rust](https://github.com/Dryad-lang/source/actions/workflows/rust.yml/badge.svg)](https://github.com/Dryad-lang/source/actions/workflows/rust.yml)
 ![License](https://img.shields.io/badge/License-MIT-blue)
 
 **Dryad** é uma linguagem de programação moderna e expressiva com foco em simplicidade, modularidade e produtividade. Inclui o sistema de package manager **Oak** integrado e um ecossistema completo de desenvolvimento.
