@@ -15,7 +15,7 @@
 - 📚 **Common Libraries**: Bibliotecas nativas organizadas
 - ⚡ **Performance**: Interpretador otimizado em Rust
 - 🛠️ **CLI Moderna**: Interface de linha de comando completa
-- 🔧 **APIs Externas**: Suporte C/FFI e Node.js preparado
+- 🔧 **APIs Externas**: Suporte para modificação do oak package manager e cli.
 
 ## 🚀 Início Rápido
 
