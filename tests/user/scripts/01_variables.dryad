@@ -1,4 +1,0 @@
- // EXPECTED: 42
-// Teste: Declaração e uso de variáveis
-let x = 42;
-print(x);

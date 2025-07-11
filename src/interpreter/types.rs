@@ -171,10 +171,6 @@ impl TypeChecker {
                     None
                 }
             }
-            Stmt::NamespaceDecl { .. } => {
-                // TODO: Implementar verificação de tipos para namespaces
-                None
-            }
             Stmt::Using { module_path: _, alias: _ } => {
                 // Using statements don't need type checking by themselves
                 None

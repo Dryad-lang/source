@@ -105,10 +105,6 @@ pub enum Stmt {
         fields: Vec<FieldDecl>,
         visibility: Visibility,
     },
-    NamespaceDecl {
-        name: String,
-        body: Vec<Stmt>,
-    },
     Using {
         module_path: String,
         alias: Option<String>,

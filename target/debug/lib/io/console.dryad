@@ -1,0 +1,29 @@
+// lib/io/console.dryad
+// Módulo de console I/O para Dryad
+
+class Console {
+    static function println(message) {
+        // Esta função será resolvida como native pelo evaluator
+        return native_console_println(message);
+    }
+
+    static function print(message) {
+        return native_console_print(message);
+    }
+    
+    static function log(message) {
+        return native_console_println(message); // alias para println
+    }
+
+    static function input(prompt) {
+        if (prompt) {
+            return native_console_input(prompt);
+        } else {
+            return native_console_input();
+        }
+    }
+    
+    static function clear() {
+        return native_console_clear();
+    }
+}

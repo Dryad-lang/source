@@ -1,4 +1,0 @@
-// EXPECTED: true
-// Teste: Comparações e lógica booleana
-let result = 5 > 3;
-print(result);

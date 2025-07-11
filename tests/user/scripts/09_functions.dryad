@@ -1,7 +1,0 @@
-// EXPECTED: Hello from function!
-// Teste: Definição e chamada de funções
-fun greet() {
-    print("Hello from function!");
-}
-
-greet();

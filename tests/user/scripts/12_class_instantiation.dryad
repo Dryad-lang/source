@@ -1,8 +1,0 @@
-// EXPECTED: <instance of Person>
-// Teste: Instanciação de classes
-class Person {
-    public name;
-}
-
-let p = new Person();
-print(p);

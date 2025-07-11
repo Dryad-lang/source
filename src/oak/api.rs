@@ -4,7 +4,7 @@
 use std::ffi::{CString, CStr};
 use std::os::raw::c_char;
 use std::path::PathBuf;
-use serde_json::{Value, json};
+use serde_json::Value;
 
 use super::{OakManager, OakOptions};
 
@@ -387,17 +387,24 @@ pub extern "C" fn oak_api_get_version() -> *mut c_char {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
     use tempfile::TempDir;
     use std::env;
 
     #[test]
     fn test_oak_api_creation() {
+        let temp_dir = TempDir::new().unwrap();
+        env::set_current_dir(temp_dir.path()).unwrap();
+        
         let api = OakApi::new();
-        assert!(!api.project_exists()); // Assumindo que não há projeto no diretório de teste
+        assert!(!api.project_exists()); // Diretório temporário vazio
     }
 
     #[test]
     fn test_api_with_config() {
+        let temp_dir = TempDir::new().unwrap();
+        env::set_current_dir(temp_dir.path()).unwrap();
+        
         let config = ApiConfig {
             verbose: true,
             force: false,

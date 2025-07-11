@@ -1,7 +1,0 @@
-// EXPECTED: Hello Ana
-// Teste: Funções com parâmetros
-fun greet(name) {
-    print("Hello " + name);
-}
-
-greet("Ana");

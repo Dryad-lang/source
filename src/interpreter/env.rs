@@ -3,6 +3,7 @@
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::cell::RefCell;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 use crate::parser::ast::{Stmt, FieldDecl, Visibility};
 
 #[derive(Debug, Clone)]
@@ -272,5 +273,33 @@ impl Instance {
 
     pub fn get_method(&self, name: &str) -> Option<Value> {
         self.class.get_method(name)
+    }
+}
+
+impl Display for Value {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        match self {
+            Value::Number(n) => write!(f, "{}", n),
+            Value::String(s) => write!(f, "{}", s),
+            Value::Bool(b) => write!(f, "{}", b),
+            Value::Null => write!(f, "null"),
+            Value::Array(arr) => {
+                let elements: Vec<String> = arr.iter().map(|v| v.to_string()).collect();
+                write!(f, "[{}]", elements.join(", "))
+            }
+            Value::Object(obj) => {
+                let pairs: Vec<String> = obj.iter()
+                    .map(|(k, v)| format!("{}: {}", k, v))
+                    .collect();
+                write!(f, "{{{}}}", pairs.join(", "))
+            }
+            Value::Class(class) => write!(f, "class {}", class.name),
+            Value::Instance(instance) => {
+                let instance_ref = instance.borrow();
+                write!(f, "instance of {}", instance_ref.class.name)
+            }
+            Value::Function { name, .. } => write!(f, "function {}", name),
+            Value::Exception { message, .. } => write!(f, "Exception: {}", message),
+        }
     }
 }

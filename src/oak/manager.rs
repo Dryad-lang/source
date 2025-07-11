@@ -193,7 +193,7 @@ impl OakManager {
         }
 
         // Salvar configuração
-        if let Err(e) = config.save(&self.config_path) {
+        if let Err(e) = config.save() {
             return OakResult::error(OakError::from_dryad_error(e));
         }
 
@@ -237,13 +237,13 @@ impl OakManager {
             ));
         }
 
-        OakConfig::load(&self.config_path)
+        OakConfig::load()
             .map_err(OakError::from_dryad_error)
     }
 
     /// Salva a configuração do projeto
     pub fn save_config(&self, config: &OakConfig) -> Result<(), OakError> {
-        config.save(&self.config_path)
+        config.save()
             .map_err(OakError::from_dryad_error)
     }
 
@@ -611,7 +611,8 @@ mod tests {
         env::set_current_dir(temp_dir.path()).unwrap();
         
         let manager = OakManager::new();
-        manager.init_project(None, None);
+        let init_result = manager.init_project(None, None);
+        assert!(init_result.success, "Failed to init project: {}", init_result.message);
         
         let config = manager.load_config().unwrap();
         assert_eq!(config.name, "my-dryad-project");
@@ -621,9 +622,12 @@ mod tests {
 
     #[test]
     fn test_error_handling() {
+        let temp_dir = tempfile::TempDir::new().unwrap();
+        std::env::set_current_dir(temp_dir.path()).unwrap();
+        
         let manager = OakManager::new();
         
-        // Tentar carregar config sem projeto
+        // Tentar carregar config sem projeto em diretório vazio
         let result = manager.load_config();
         assert!(result.is_err());
         assert_eq!(result.unwrap_err().code, OakErrorCode::ProjectNotFound);

@@ -32,6 +32,10 @@ impl Parser {
         &self.errors
     }
     
+    pub fn current_token(&self) -> &Token {
+        &self.current
+    }
+    
     fn add_error(&mut self, code: ErrorCode, message: String) {
         let error = DryadError::with_code(code, message, Some((self.current_line, self.current_column)));
         self.errors.push(error);
@@ -81,9 +85,11 @@ impl Parser {
             Token::While => self.parse_while(),
             Token::For => self.parse_for(),
             Token::LBrace => self.parse_block(),
-            Token::Class => self.parse_class(),
+            Token::Class => {
+                let result = self.parse_class();
+                result
+            },
             Token::Fun | Token::Function => self.parse_function(Visibility::Public),
-            Token::Namespace => self.parse_namespace(),
             Token::Use => self.parse_use(),
             Token::Using => self.parse_using(),
             Token::Export => self.parse_export(),
@@ -747,7 +753,9 @@ impl Parser {
                 self.advance();
                 class_name
             },
-            _ => return None,
+            _ => {
+                return None;
+            },
         };
 
         if !self.matches(&Token::LBrace) {
@@ -758,12 +766,14 @@ impl Parser {
         let mut fields = Vec::new();
 
         while !self.check(&Token::RBrace) && !self.check(&Token::Eof) {
+            
             // Parse visibility and static modifiers
             let (member_visibility, is_static) = if matches!(self.current, Token::Public | Token::Private | Token::Protected | Token::Static) {
                 self.parse_visibility_and_static()
             } else {
                 (Visibility::Public, false)
             };
+            
 
             match &self.current {
                 Token::Fun | Token::Function => {
@@ -795,6 +805,7 @@ impl Parser {
         if !self.matches(&Token::RBrace) {
             return None;
         }
+        
 
         Some(Stmt::ClassDecl {
             name,
@@ -914,12 +925,15 @@ impl Parser {
         }
 
         let body = match self.parse_block() {
-            Some(body) => Box::new(body),
+            Some(body) => {
+                Box::new(body)
+            },
             None => {
                 self.add_error(ErrorCode::E2009, "Expected function body after parameters".to_string());
                 return None;
             }
         };
+        
 
         Some(Stmt::FunDecl {
             name,
@@ -939,56 +953,12 @@ impl Parser {
             self.parse_expression()
         };
         
-        Some(Stmt::Return(value))
-    }
-
-    fn parse_namespace(&mut self) -> Option<Stmt> {
-        self.advance(); // consume 'namespace'
-        
-        // Parse namespace name (pode ser A.B.C)
-        let mut namespace_parts = Vec::new();
-        
-        if let Token::Identifier(name) = &self.current {
-            namespace_parts.push(name.clone());
+        // Consume the semicolon if present
+        if self.check(&Token::Semicolon) {
             self.advance();
-            
-            // Suporte para namespaces aninhados (A.B.C)
-            while self.matches(&Token::Dot) {
-                if let Token::Identifier(part) = &self.current {
-                    namespace_parts.push(part.clone());
-                    self.advance();
-                } else {
-                    return None;
-                }
-            }
-        } else {
-            return None;
         }
         
-        let namespace_name = namespace_parts.join(".");
-        
-        // Parse body
-        if !self.matches(&Token::LBrace) {
-            return None;
-        }
-        
-        let mut body = Vec::new();
-        while !self.check(&Token::RBrace) && !self.check(&Token::Eof) {
-            if let Some(stmt) = self.parse_statement() {
-                body.push(stmt);
-            } else {
-                break;
-            }
-        }
-        
-        if !self.matches(&Token::RBrace) {
-            return None;
-        }
-        
-        Some(Stmt::NamespaceDecl {
-            name: namespace_name,
-            body,
-        })
+        Some(Stmt::Return(value))
     }
 
     fn parse_using(&mut self) -> Option<Stmt> {

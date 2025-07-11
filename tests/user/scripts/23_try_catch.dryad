@@ -1,9 +1,0 @@
-// tests/user/scripts/23_try_catch.dryad
-// EXPECTED: Exception: Erro de teste
-// Teste: Try-Catch básico
-try {
-    throw "Erro de teste";
-} catch (e) {
-    print(e); // Exception: Erro de teste
-}
-

@@ -250,112 +250,6 @@ impl Evaluator {
                 }
             }
             
-            Stmt::NamespaceDecl { name, body } => {
-                // Processar declarações dentro do namespace
-                let mut final_result = EvaluationResult::new(None);
-                
-                for stmt in body {
-                    match stmt {
-                        Stmt::ClassDecl { name: class_name, methods, fields, visibility: _ } => {
-                            // Criar classe com nome completo incluindo namespace
-                            let full_class_name = format!("{}.{}", name, class_name);
-                            
-                            let mut class = Class::new(full_class_name.clone(), fields.clone());
-                            
-                            // Processar métodos da classe
-                            for method in methods {
-                                if let Stmt::FunDecl { name: method_name, params, body, visibility, is_static } = method {
-                                    let method_value = Value::Function {
-                                        name: method_name.clone(),
-                                        params: params.clone(),
-                                        body: *body.clone(),
-                                        visibility: visibility.clone(),
-                                        is_static: *is_static,
-                                    };
-                                    
-                                    if *is_static {
-                                        class.add_static_method(method_name.clone(), method_value);
-                                    } else {
-                                        class.add_method(method_name.clone(), method_value);
-                                    }
-                                }
-                            }
-                            
-                            let class_value = Value::Class(Rc::new(class));
-                            env.define_in_namespace(name, class_name, class_value);
-                        }
-                        
-                        Stmt::FunDecl { name: func_name, params, body, visibility, is_static } => {
-                            // Criar função com nome completo incluindo namespace
-                            let func_value = Value::Function {
-                                name: format!("{}.{}", name, func_name),
-                                params: params.clone(),
-                                body: *body.clone(),
-                                visibility: visibility.clone(),
-                                is_static: *is_static,
-                            };
-                            env.define_in_namespace(name, func_name, func_value);
-                        }
-                        
-                        Stmt::Export { item } => {
-                            // Process export within namespace
-                            let export_result = self.eval_stmt(item, env);
-                            final_result.errors.extend(export_result.errors);
-                            
-                            // Extract exported item and add to namespace
-                            match item.as_ref() {
-                                Stmt::FunDecl { name: func_name, params, body, visibility, is_static } => {
-                                    let func_value = Value::Function {
-                                        name: format!("{}.{}", name, func_name),
-                                        params: params.clone(),
-                                        body: *body.clone(),
-                                        visibility: visibility.clone(),
-                                        is_static: *is_static,
-                                    };
-                                    env.define_in_namespace(name, func_name, func_value.clone());
-                                    env.export_item(format!("{}.{}", name, func_name), func_value);
-                                }
-                                Stmt::ClassDecl { name: class_name, methods, fields, visibility: _ } => {
-                                    let full_class_name = format!("{}.{}", name, class_name);
-                                    let mut class = Class::new(full_class_name.clone(), fields.clone());
-                                    
-                                    for method in methods {
-                                        if let Stmt::FunDecl { name: method_name, params, body, visibility, is_static } = method {
-                                            let method_value = Value::Function {
-                                                name: method_name.clone(),
-                                                params: params.clone(),
-                                                body: *body.clone(),
-                                                visibility: visibility.clone(),
-                                                is_static: *is_static,
-                                            };
-                                            
-                                            if *is_static {
-                                                class.add_static_method(method_name.clone(), method_value);
-                                            } else {
-                                                class.add_method(method_name.clone(), method_value);
-                                            }
-                                        }
-                                    }
-                                    
-                                    let class_value = Value::Class(Rc::new(class));
-                                    env.define_in_namespace(name, class_name, class_value.clone());
-                                    env.export_item(format!("{}.{}", name, class_name), class_value);
-                                }
-                                _ => {}
-                            }
-                        }
-                        
-                        _ => {
-                            // Para outros tipos de statement, executar normalmente
-                            let result = self.eval_stmt(stmt, env);
-                            final_result.errors.extend(result.errors);
-                        }
-                    }
-                }
-                
-                final_result
-            }
-            
             Stmt::Using { module_path, alias } => {
                 // Try to load external module first
                 let module_result = {
@@ -388,7 +282,7 @@ impl Evaluator {
                         let all_variables = module_env.get_all_variables();
                         for (var_name, var_value) in &all_variables {
                             if var_name.contains('.') {
-                                // Import full namespace path (e.g., Text.JSON)
+                                // Import full namespace path (e.g., IO.Console)
                                 env.set(var_name.clone(), var_value.clone());
                                 
                                 // Also import just the class name if no alias specified
@@ -399,6 +293,9 @@ impl Evaluator {
                                         env.set(class_name.to_string(), var_value.clone());
                                     }
                                 }
+                            } else {
+                                // Import direct variables (classes without namespace)
+                                env.set(var_name.clone(), var_value.clone());
                             }
                         }
                     }
@@ -440,6 +337,12 @@ impl Evaluator {
                         for (name, value) in &exported_items {
                             env.set(name.clone(), value.clone());
                         }
+                        
+                        // Also import all variables (not just exported ones) - for backward compatibility
+                        let all_variables = module_env.get_all_variables();
+                        for (var_name, var_value) in &all_variables {
+                            env.set(var_name.clone(), var_value.clone());
+                        }
                     }
                     Err(e) => {
                         let error = DryadError::new(
@@ -469,11 +372,6 @@ impl Evaluator {
                         if let Some(value) = env.get(name) {
                             env.export_item(name.clone(), value);
                         }
-                    }
-                    Stmt::NamespaceDecl { name, .. } => {
-                        // Export all items from namespace
-                        // This is simplified - in practice, you'd need to track namespace contents
-                        env.export_item(name.clone(), Value::Null);
                     }
                     _ => {
                         // Other statements can't be exported

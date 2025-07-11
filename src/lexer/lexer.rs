@@ -9,8 +9,6 @@ pub struct Lexer {
 
 impl Lexer {
     pub fn new(input: &str) -> Self {
-        eprintln!("DEBUG: Creating lexer with input: '{}'", input);
-        eprintln!("DEBUG: Input length: {}", input.len());
         Self {
             input: input.chars().collect(),
             current: 0,
@@ -21,12 +19,10 @@ impl Lexer {
         self.skip_whitespace();
 
         if self.is_at_end() {
-            eprintln!("DEBUG: Lexer reached end of input");
             return Token::Eof;
         }
 
         let c = self.advance();
-        eprintln!("DEBUG: Lexer processing character: '{}'", c);
 
         match c {
             '+' => Token::Plus,
@@ -67,7 +63,6 @@ impl Lexer {
             '{' => Token::LBrace,
             '}' => Token::RBrace,
             '[' => {
-                eprintln!("DEBUG: Found opening bracket!");
                 Token::LBracket
             }
             ']' => Token::RBracket,
@@ -78,7 +73,6 @@ impl Lexer {
             ch if ch.is_ascii_digit() => self.read_number(ch),
             ch if Self::is_identifier_start(ch) => self.read_identifier(ch),
             _ => {
-                eprintln!("DEBUG: Unknown character '{}' at position {}", c, self.current - 1);
                 Token::Eof // Retorna EOF em vez de recursão infinita
             }
         }

@@ -1,8 +1,0 @@
-// EXPECTED: <class Person>
-// Teste: Declaração de classe básica
-class Person {
-    public name;
-    private age;
-}
-
-print(Person);

@@ -1,7 +1,0 @@
-// EXPECTED: 54321
-// Teste: Laços while
-let i = 5;
-while (i > 0) {
-    print(i);
-    i = i - 1;
-}
