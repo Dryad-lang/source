@@ -6,6 +6,7 @@
 
 **Dryad** é uma linguagem de programação moderna e expressiva com foco em simplicidade, modularidade e produtividade. Inclui o sistema de package manager **Oak** integrado e um ecossistema completo de desenvolvimento.
 
+
 ## ✨ Principais Características
 
 - 🚀 **Sintaxe Simples**: Fácil de aprender e usar
