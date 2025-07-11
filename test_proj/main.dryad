@@ -1,3 +1,0 @@
-using io;
-
-Console.println("Hello from Console static method!");
