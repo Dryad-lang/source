@@ -1,0 +1,12 @@
+class Test {
+    function instanceMethod() {
+        return "instance";
+    }
+    
+    static function staticMethod() {
+        return "static";
+    }
+}
+
+print("Método estático: " + Test.staticMethod());
+print("Tentando método de instância: " + Test.instanceMethod());

@@ -727,20 +727,7 @@ print(pessoa1.apresentar()); // "Meu nome é Ana e tenho 25 anos."
 print(pessoa2.aniversario()); // "Agora tenho 31 anos!"
 ```
 
-### Objeto Literal
 
-```dryad
-let carro = {
-    marca: "Toyota",
-    modelo: "Corolla",
-    ano: 2020,
-    
-    detalhes() {
-        return this.marca + " " + this.modelo + " (" + this.ano + ")";
-    }
-};
-print(carro.detalhes()); // "Toyota Corolla (2020)"
-```
 
 
 ### Métodos Estáticos
@@ -890,7 +877,15 @@ export class Retangulo {
 
 #### Use (Import direto)
 ```dryad
+// Importa por caminho relativo
 use "./library/utilidades";
+
+// Importa por caminho absoluto
+use "/caminho/para/biblioteca/matematica";
+
+// Importa apartir da raiz do projeto
+use "@/lib/matematica";
+
 let resultado = quadrado(4); // Usa quadrado diretamente
 ```
 

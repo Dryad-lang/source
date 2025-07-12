@@ -1348,6 +1348,70 @@ impl Interpreter {
         let object = self.evaluate(object_expr)?;
         
         match object {
+            Value::Class { name: class_name, methods, .. } => {
+                // Static method call on a class
+                if let Some(method) = methods.get(method_name) {
+                    // Check if method is static
+                    if !method.is_static {
+                        return Err(DryadError::new(3024, &format!("Método '{}' não é estático", method_name)));
+                    }
+                    
+                    // Check visibility (simplified - public only for now)
+                    match method.visibility {
+                        Visibility::Private => {
+                            return Err(DryadError::new(3024, &format!("Método '{}' é privado", method_name)));
+                        }
+                        _ => {} // Public and Protected allowed for now
+                    }
+                    
+                    // Evaluate arguments
+                    let mut arg_values = Vec::new();
+                    for arg in args {
+                        arg_values.push(self.evaluate(arg)?);
+                    }
+                    
+                    // Check parameter count
+                    if arg_values.len() != method.params.len() {
+                        return Err(DryadError::new(3025, &format!(
+                            "Método '{}' espera {} argumentos, mas recebeu {}",
+                            method_name, method.params.len(), arg_values.len()
+                        )));
+                    }
+                    
+                    // Save current state
+                    let saved_vars = self.variables.clone();
+                    let saved_instance = self.current_instance.clone();
+                    
+                    // Static methods don't have 'this' context
+                    self.current_instance = None;
+                    
+                    // Bind parameters
+                    for (param, value) in method.params.iter().zip(arg_values.iter()) {
+                        self.variables.insert(param.clone(), value.clone());
+                    }
+                    
+                    // Execute method body
+                    let result = match self.execute_statement(&method.body) {
+                        Ok(value) => Ok(value),
+                        Err(e) => {
+                            // Check if it's a return value
+                            if e.code() == 3021 {
+                                self.parse_return_value(e.message())
+                            } else {
+                                Err(e)
+                            }
+                        }
+                    };
+                    
+                    // Restore state
+                    self.variables = saved_vars;
+                    self.current_instance = saved_instance;
+                    
+                    result
+                } else {
+                    Err(DryadError::new(3026, &format!("Método estático '{}' não encontrado na classe '{}'", method_name, class_name)))
+                }
+            }
             Value::Instance { class_name, properties } => {
                 // Get the class definition
                 if let Some(Value::Class { methods, .. }) = self.classes.get(&class_name).cloned() {
@@ -1473,6 +1537,31 @@ impl Interpreter {
         let object = self.evaluate(object_expr)?;
         
         match object {
+            Value::Class { name: class_name, properties: class_props, .. } => {
+                // Static property access on a class
+                if let Some(class_prop) = class_props.get(property_name) {
+                    // Check if property is static
+                    if !class_prop.is_static {
+                        return Err(DryadError::new(3029, &format!("Propriedade '{}' não é estática", property_name)));
+                    }
+                    
+                    // Check visibility (simplified - public only for now)
+                    match class_prop.visibility {
+                        Visibility::Private => {
+                            return Err(DryadError::new(3029, &format!("Propriedade '{}' é privada", property_name)));
+                        }
+                        _ => {
+                            if let Some(default_value) = &class_prop.default_value {
+                                return Ok(default_value.clone());
+                            } else {
+                                return Ok(Value::Null);
+                            }
+                        }
+                    }
+                } else {
+                    Err(DryadError::new(3030, &format!("Propriedade estática '{}' não encontrada na classe '{}'", property_name, class_name)))
+                }
+            }
             Value::Instance { class_name, mut properties } => {
                 // First check instance properties
                 if let Some(value) = properties.get(property_name) {
