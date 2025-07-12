@@ -119,8 +119,12 @@ fn test_function_call_parsing() {
     let statements = parse_tokens("saudacao(\"Maria\");");
     
     assert_eq!(statements.len(), 1);
-    if let Stmt::Expression(Expr::Call(name, args)) = &statements[0] {
-        assert_eq!(name, "saudacao");
+    if let Stmt::Expression(Expr::Call(func_expr, args)) = &statements[0] {
+        if let Expr::Variable(name) = func_expr.as_ref() {
+            assert_eq!(name, "saudacao");
+        } else {
+            panic!("Expected variable function name");
+        }
         assert_eq!(args.len(), 1);
         if let Expr::Literal(Literal::String(s)) = &args[0] {
             assert_eq!(s, "Maria");
@@ -137,8 +141,12 @@ fn test_function_call_with_multiple_arguments() {
     let statements = parse_tokens("calcular(1, 2, 3);");
     
     assert_eq!(statements.len(), 1);
-    if let Stmt::Expression(Expr::Call(name, args)) = &statements[0] {
-        assert_eq!(name, "calcular");
+    if let Stmt::Expression(Expr::Call(func_expr, args)) = &statements[0] {
+        if let Expr::Variable(name) = func_expr.as_ref() {
+            assert_eq!(name, "calcular");
+        } else {
+            panic!("Expected variable function name");
+        }
         assert_eq!(args.len(), 3);
         
         for (i, arg) in args.iter().enumerate() {
@@ -158,12 +166,20 @@ fn test_nested_function_calls() {
     let statements = parse_tokens("print(saudacao(\"João\"));");
     
     assert_eq!(statements.len(), 1);
-    if let Stmt::Expression(Expr::Call(outer_name, outer_args)) = &statements[0] {
-        assert_eq!(outer_name, "print");
+    if let Stmt::Expression(Expr::Call(outer_func_expr, outer_args)) = &statements[0] {
+        if let Expr::Variable(outer_name) = outer_func_expr.as_ref() {
+            assert_eq!(outer_name, "print");
+        } else {
+            panic!("Expected variable function name");
+        }
         assert_eq!(outer_args.len(), 1);
         
-        if let Expr::Call(inner_name, inner_args) = &outer_args[0] {
-            assert_eq!(inner_name, "saudacao");
+        if let Expr::Call(inner_func_expr, inner_args) = &outer_args[0] {
+            if let Expr::Variable(inner_name) = inner_func_expr.as_ref() {
+                assert_eq!(inner_name, "saudacao");
+            } else {
+                panic!("Expected variable function name");
+            }
             assert_eq!(inner_args.len(), 1);
             
             if let Expr::Literal(Literal::String(s)) = &inner_args[0] {
@@ -184,8 +200,12 @@ fn test_function_call_with_expressions() {
     let statements = parse_tokens("calcular(x + 1, y * 2);");
     
     assert_eq!(statements.len(), 1);
-    if let Stmt::Expression(Expr::Call(name, args)) = &statements[0] {
-        assert_eq!(name, "calcular");
+    if let Stmt::Expression(Expr::Call(func_expr, args)) = &statements[0] {
+        if let Expr::Variable(name) = func_expr.as_ref() {
+            assert_eq!(name, "calcular");
+        } else {
+            panic!("Expected variable function name");
+        }
         assert_eq!(args.len(), 2);
         
         // Primeiro argumento: x + 1

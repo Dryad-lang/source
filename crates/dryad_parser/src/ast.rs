@@ -28,7 +28,7 @@ pub enum Expr {
     Binary(Box<Expr>, String, Box<Expr>),
     Unary(String, Box<Expr>),
     Variable(String),
-    Call(String, Vec<Expr>),
+    Call(Box<Expr>, Vec<Expr>),
     PostIncrement(Box<Expr>),             // x++
     PostDecrement(Box<Expr>),             // x--
     PreIncrement(Box<Expr>),              // ++x

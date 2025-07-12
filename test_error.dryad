@@ -1,3 +1,0 @@
-// Teste de erro - variável não definida
-let x = 42;
-y; // Esta variável não foi definida

@@ -1,9 +1,0 @@
-// Teste básico de variáveis
-let x = 42;
-let y = "Hello, Dryad!";
-let z = x + 10;
-
-// Usando as variáveis
-x;
-y;
-z;

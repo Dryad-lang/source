@@ -1,9 +1,0 @@
-class Console {
-    public function log(mensagem) {
-        // Simula o console.log do JavaScript
-        print(mensagem);
-    }
-}
-
-// Teste das funcionalidades
-Console.log("=== SISTEMA DE FUNÇÕES NATIVAS DRYAD ===");

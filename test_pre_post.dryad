@@ -1,5 +1,0 @@
-// Teste de diferença entre pré e pós incremento
-let x = 5;
-let a = x++;  // a = 5, x = 6
-let b = ++x;  // b = 7, x = 7
-a + b;        // 5 + 7 = 12

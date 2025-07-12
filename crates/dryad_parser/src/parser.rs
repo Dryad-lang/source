@@ -459,6 +459,36 @@ impl Parser {
                         }
                     }
                 }
+                // Chamada de função: expr(args...)
+                Token::Symbol('(') => {
+                    self.advance(); // consome '('
+                    
+                    let mut args = Vec::new();
+                    
+                    // Parse arguments if any
+                    if !matches!(self.peek(), Token::Symbol(')')) {
+                        loop {
+                            let arg = self.expression()?;
+                            args.push(arg);
+                            
+                            match self.peek() {
+                                Token::Symbol(',') => {
+                                    self.advance(); // consume comma
+                                    continue;
+                                }
+                                Token::Symbol(')') => break,
+                                _ => return Err(DryadError::new(2075, "Esperado ',' ou ')' na lista de argumentos da chamada"))
+                            }
+                        }
+                    }
+                    
+                    // Expect closing parenthesis
+                    if !matches!(self.advance(), Token::Symbol(')')) {
+                        return Err(DryadError::new(2076, "Esperado ')' após argumentos da chamada"));
+                    }
+                    
+                    expr = Expr::Call(Box::new(expr), args);
+                }
                 _ => break,
             }
         }
@@ -534,7 +564,7 @@ impl Parser {
                         return Err(DryadError::new(2018, "Esperado ')' após argumentos"));
                     }
                     
-                    Ok(Expr::Call(var_name, args))
+                    Ok(Expr::Call(Box::new(Expr::Variable(var_name)), args))
                 } else {
                     // Just a variable reference
                     Ok(Expr::Variable(var_name))

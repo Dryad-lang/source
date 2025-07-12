@@ -35,6 +35,7 @@ pub enum Value {
     Lambda {
         params: Vec<String>,
         body: Expr,
+        closure: HashMap<String, Value>, // Captura o escopo onde a lambda foi criada
     },
     Class {
         name: String,
@@ -411,7 +412,7 @@ impl Interpreter {
             Expr::Unary(operator, operand) => {
                 self.eval_unary(operator, operand)
             }
-            Expr::Call(name, args) => self.eval_call(name, args),
+            Expr::Call(func_expr, args) => self.eval_call(func_expr, args),
             Expr::PostIncrement(expr) => self.eval_post_increment(expr),
             Expr::PostDecrement(expr) => self.eval_post_decrement(expr),
             Expr::PreIncrement(expr) => self.eval_pre_increment(expr),
@@ -424,6 +425,7 @@ impl Interpreter {
                 Ok(Value::Lambda {
                     params: params.clone(),
                     body: *body.clone(),
+                    closure: self.variables.clone(), // Captura o escopo atual
                 })
             }
             Expr::This => {
@@ -506,7 +508,29 @@ impl Interpreter {
         }
     }
 
-    fn eval_call(&mut self, name: &str, args: &[Expr]) -> Result<Value, DryadError> {
+    fn eval_call(&mut self, func_expr: &Expr, args: &[Expr]) -> Result<Value, DryadError> {
+        // Se a expressão da função é uma variável simples, usar o caminho otimizado
+        if let Expr::Variable(name) = func_expr {
+            return self.eval_call_by_name(name, args);
+        }
+        
+        // Para expressões complexas (como lambdas imediatas), avaliar a expressão primeiro
+        let function_value = self.evaluate(func_expr)?;
+        
+        match function_value {
+            Value::Function { name: _, params, body } => {
+                self.call_user_function(params, body, args)
+            }
+            Value::Lambda { params, body, closure } => {
+                self.call_lambda(params, body, closure, args)
+            }
+            _ => {
+                Err(DryadError::new(3003, "Expressão não é uma função"))
+            }
+        }
+    }
+
+    fn eval_call_by_name(&mut self, name: &str, args: &[Expr]) -> Result<Value, DryadError> {
         // Primeiro verificar se é uma classe (para instanciação)
         if self.classes.contains_key(name) {
             return self.eval_class_instantiation(name, args);
@@ -539,8 +563,8 @@ impl Interpreter {
                         Value::Function { name: _, params, body } => {
                             self.call_user_function(params, body, args)
                         }
-                        Value::Lambda { params, body } => {
-                            self.call_lambda(params, body, args)
+                        Value::Lambda { params, body, closure } => {
+                            self.call_lambda(params, body, closure, args)
                         }
                         _ => {
                             Err(DryadError::new(3003, &format!("'{}' não é uma função", name)))
@@ -611,7 +635,7 @@ impl Interpreter {
         result.or(Ok(Value::Null)) // Se não teve return explícito, retorna null
     }
 
-    fn call_lambda(&mut self, params: Vec<String>, body: Expr, args: &[Expr]) -> Result<Value, DryadError> {
+    fn call_lambda(&mut self, params: Vec<String>, body: Expr, closure: HashMap<String, Value>, args: &[Expr]) -> Result<Value, DryadError> {
         // Verificar número de argumentos
         if args.len() != params.len() {
             return Err(DryadError::new(3004, &format!(
@@ -621,10 +645,13 @@ impl Interpreter {
             )));
         }
         
-        // Salvar estado atual das variáveis (para escopo)
+        // Salvar estado atual das variáveis
         let saved_variables = self.variables.clone();
         
-        // Avaliar argumentos e criar parâmetros
+        // Restaurar o closure (escopo onde a lambda foi criada)
+        self.variables = closure;
+        
+        // Avaliar argumentos e criar parâmetros (sobrescreve no escopo da lambda)
         for (i, param) in params.iter().enumerate() {
             let arg_value = self.evaluate(&args[i])?;
             self.variables.insert(param.clone(), arg_value);
@@ -633,7 +660,7 @@ impl Interpreter {
         // Executar corpo da lambda (é uma expressão)
         let result = self.evaluate(&body);
         
-        // Restaurar estado das variáveis
+        // Restaurar estado das variáveis original
         self.variables = saved_variables;
         
         result
@@ -1569,7 +1596,7 @@ impl Interpreter {
             Ok(instance)
         } else {
             // Not a class, treat as regular function call
-            self.eval_call(class_name, args)
+            self.eval_call_by_name(class_name, args)
         }
     }
 

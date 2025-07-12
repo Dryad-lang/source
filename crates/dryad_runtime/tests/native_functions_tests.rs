@@ -38,7 +38,7 @@ fn test_native_directive_console_io() {
 fn test_native_directive_file_io() {
     let code = r#"
         #<file_io>
-        let exists = native_file_exists("nonexistent_file.txt")
+        let exists = native_file_exists("nonexistent_file.txt");
         exists
     "#;
     
@@ -50,7 +50,7 @@ fn test_native_directive_file_io() {
 fn test_native_directive_debug() {
     let code = r#"
         #<debug>
-        let type_name = native_typeof(42)
+        let type_name = native_typeof(42);
         type_name
     "#;
     
@@ -62,7 +62,7 @@ fn test_native_directive_debug() {
 fn test_native_directive_system_env() {
     let code = r#"
         #<system_env>
-        let platform = native_platform()
+        let platform = native_platform();
         platform
     "#;
     
@@ -83,8 +83,8 @@ fn test_multiple_native_directives() {
         #<debug>
         #<system_env>
         
-        let platform = native_platform()
-        let type_name = native_typeof(platform)
+        let platform = native_platform();
+        let type_name = native_typeof(platform);
         type_name
     "#;
     
@@ -96,7 +96,7 @@ fn test_multiple_native_directives() {
 fn test_native_directive_date_time() {
     let code = r#"
         #<date_time>
-        let timestamp = native_timestamp()
+        let timestamp = native_timestamp();
         timestamp
     "#;
     
@@ -122,13 +122,13 @@ fn test_native_print_with_expression() {
 fn test_native_functions_with_variables() {
     let code = r#"
         #<debug>
-        let x = 42
-        let y = "hello"
-        let z = true
+        let x = 42;
+        let y = "hello";
+        let z = true;
         
-        let type_x = native_typeof(x)
-        let type_y = native_typeof(y)
-        let type_z = native_typeof(z)
+        let type_x = native_typeof(x);
+        let type_y = native_typeof(y);
+        let type_z = native_typeof(z);
         
         type_x + "," + type_y + "," + type_z
     "#;
@@ -181,7 +181,7 @@ fn test_native_function_with_wrong_arguments() {
 fn test_native_directive_crypto() {
     let code = r#"
         #<crypto>
-        let uuid = native_uuid()
+        let uuid = native_uuid();
         uuid
     "#;
     
@@ -201,10 +201,10 @@ fn test_native_typeof_all_types() {
     let code = r#"
         #<debug>
         
-        let number_type = native_typeof(42)
-        let string_type = native_typeof("hello")
-        let bool_type = native_typeof(true)
-        let null_type = native_typeof(null)
+        let number_type = native_typeof(42);
+        let string_type = native_typeof("hello");
+        let bool_type = native_typeof(true);
+        let null_type = native_typeof(null);
         
         number_type + "," + string_type + "," + bool_type + "," + null_type
     "#;
@@ -228,7 +228,7 @@ fn test_native_sleep_function() {
 fn test_native_uptime_function() {
     let code = r#"
         #<date_time>
-        let uptime = native_uptime()
+        let uptime = native_uptime();
         uptime
     "#;
     

@@ -1,7 +1,0 @@
-// Exemplo exato do SYNTAX.md
-let x = 5;
-x += 2;  // x = x + 2 (agora x é 7)
-x -= 3;  // x = x - 3 (agora x é 4)
-x *= 2;  // x = x * 2 (agora x é 8)
-x /= 4;  // x = x / 4 (agora x é 2)
-x;       // retorna o valor final

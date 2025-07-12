@@ -136,9 +136,7 @@ fn test_lambda_immediate_invocation() {
     "#;
     
     let result = execute_dryad_code(code);
-    // Este teste pode falhar por enquanto pois requer parsing de expressões mais complexas
-    // Mas está aqui para futuras implementações
-    assert!(result.is_ok() || result.is_err(), "Lambda immediate invocation test");
+    assert!(result.is_ok(), "Lambda immediate invocation should work: {:?}", result.err());
 }
 
 #[test]
