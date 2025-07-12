@@ -1,16 +1,15 @@
 # Dryad Programming Language
 
-<<<<<<< HEAD
+
 Dryad é uma linguagem de programação moderna, interpretada, com sintaxe expressiva e tipagem dinâmica.
 =======
 ![Dryad Logo](https://img.shields.io/badge/Dryad-v0.1.0-green)
 ![Oak Package Manager](https://img.shields.io/badge/Oak-Modular-blue)
 ![License](https://img.shields.io/badge/License-MIT-blue)
->>>>>>> 500814481b729ea2558fa5c85f963935a7b97545
+[![Rust](https://github.com/Dryad-lang/source/actions/workflows/rust.yml/badge.svg)](https://github.com/Dryad-lang/source/actions/workflows/rust.yml)
 
 ## 🎯 Pilares de Desenvolvimento
 
-<<<<<<< HEAD
 1. **Test-Driven Development (TDD)** - Cada funcionalidade possui testes abrangentes
 2. **Sistema de Erros Padronizado** - Códigos de erro categorizados e documentados
 3. **CLI Intuitivo** - Interface de linha de comando rica em funcionalidades
@@ -19,7 +18,6 @@ Dryad é uma linguagem de programação moderna, interpretada, com sintaxe expre
 6. **Completude sem Complexidade** - Código completo mas sem over-engineering
 
 ## 📦 Estrutura do Projeto
-=======
 
 ## ✨ Principais Características
 
