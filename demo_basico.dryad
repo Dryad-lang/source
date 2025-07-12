@@ -1,0 +1,53 @@
+// Demonstração básica funcional do Sistema POO do Dryad
+
+// Classe Pessoa
+class Pessoa {
+    private nome;
+    private idade;
+    
+    function init(nome, idade) {
+        this.nome = nome;
+        this.idade = idade;
+    }
+    
+    public function getNome() {
+        return this.nome;
+    }
+    
+    public function getIdade() {
+        return this.idade;
+    }
+    
+    public function saudar() {
+        return "Olá!";
+    }
+}
+
+// Classe Produto  
+class Produto {
+    private nome;
+    private preco;
+    
+    function init(nome, preco) {
+        this.nome = nome;
+        this.preco = preco;
+    }
+    
+    public function getNome() {
+        return this.nome;
+    }
+    
+    public function getPreco() {
+        return this.preco;
+    }
+}
+
+// Teste das funcionalidades básicas
+let joao = Pessoa("João", 30);
+let nome_joao = joao.getNome();
+let idade_joao = joao.getIdade();
+let saudacao = joao.saudar();
+
+let notebook = Produto("Notebook", 2500);
+let nome_produto = notebook.getNome();
+let preco_produto = notebook.getPreco();

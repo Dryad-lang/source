@@ -1,0 +1,18 @@
+#<console_io>
+
+// Teste de objeto literal conforme documentação
+let carro = {
+    marca: "Toyota",
+    modelo: "Corolla",
+    ano: 2020,
+    
+    detalhes() {
+        return this.marca + " " + this.modelo + " (" + this.ano + ")";
+    }
+};
+
+println("=== TESTE DE OBJETO LITERAL ===");
+println("Marca: " + carro.marca);
+println("Modelo: " + carro.modelo);
+println("Ano: " + carro.ano);
+println("Detalhes: " + carro.detalhes());

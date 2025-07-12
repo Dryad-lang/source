@@ -1,0 +1,14 @@
+[package]
+name = "oak"
+version = "0.1.0"
+edition = "2021"
+description = "Gestor de pacotes para a linguagem Dryad"
+
+[[bin]]
+name = "oak"
+path = "src/main.rs"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+clap = { version = "4.0", features = ["derive"] }

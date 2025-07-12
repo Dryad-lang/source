@@ -1,0 +1,9 @@
+// Teste incremental - só métodos estáticos
+class Animal {
+    public static function info() {
+        return "Esta é a classe Animal";
+    }
+}
+
+// Teste método estático
+let infoAnimal = Animal.info();

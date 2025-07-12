@@ -1,0 +1,10 @@
+// Teste com expressões mais complexas
+let x = 2;
+let y = 3;
+let z = 4;
+
+x += y * z;     // x = 2 + (3 * 4) = 14
+y *= x - z;     // y = 3 * (14 - 4) = 30
+z += x + y;     // z = 4 + (14 + 30) = 48
+
+z;

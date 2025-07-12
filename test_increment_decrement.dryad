@@ -1,0 +1,5 @@
+// Exemplo exato do SYNTAX.md
+let contador = 0;
+contador++;  // Incrementa 1 (agora contador é 1)
+contador--;  // Decrementa 1 (agora contador é 0)
+contador;

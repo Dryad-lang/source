@@ -1,0 +1,16 @@
+[workspace]
+members = [
+    "crates/dryad_errors",
+    "crates/dryad_lexer", 
+    "crates/dryad_parser",
+    "crates/dryad_runtime",
+    "crates/dryad_cli",
+    "crates/oak"
+]
+resolver = "2"
+
+[workspace.dependencies]
+dryad_errors = { path = "crates/dryad_errors" }
+dryad_lexer = { path = "crates/dryad_lexer" }
+dryad_parser = { path = "crates/dryad_parser" }
+dryad_runtime = { path = "crates/dryad_runtime" }

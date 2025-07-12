@@ -1,0 +1,25 @@
+// Teste completo do sistema de classes
+class Pessoa {
+    private nome;
+    private idade;
+    
+    function init(nome, idade) {
+        this.nome = nome;
+        this.idade = idade;
+    }
+    
+    public function getNome() {
+        return this.nome;
+    }
+    
+    public function getIdade() {
+        return this.idade;
+    }
+}
+
+// Criar uma instância da classe
+let pessoa = Pessoa("João", 30);
+
+// Acessar propriedades
+let nome = pessoa.getNome();
+let idade = pessoa.getIdade();

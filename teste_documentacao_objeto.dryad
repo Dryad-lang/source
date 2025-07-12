@@ -1,0 +1,13 @@
+#<console_io>
+
+// Exemplo exato da documentação SYNTAX.md
+let carro = {
+    marca: "Toyota",
+    modelo: "Corolla",
+    ano: 2020,
+    
+    detalhes() {
+        return this.marca + " " + this.modelo + " (" + this.ano + ")";
+    }
+};
+print(carro.detalhes()); // "Toyota Corolla (2020)"

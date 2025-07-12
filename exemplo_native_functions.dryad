@@ -1,0 +1,56 @@
+// Exemplo completo do sistema de funções nativas do Dryad
+
+// Carregando módulos de funcionalidades nativas
+#<console_io>      // Funções de entrada/saída do console
+#<file_io>         // Funções de manipulação de arquivos
+#<system_env>      // Funções do sistema e ambiente
+#<debug>           // Funções de depuração
+#<date_time>       // Funções de data e hora
+#<terminal_ansi>   // Funções de formatação de terminal
+#<crypto>          // Funções de criptografia
+#<binary_io>       // Funções de I/O binário
+
+
+// === DEMONSTRAÇÃO DO SISTEMA DE FUNÇÕES NATIVAS ===
+
+// 1. Saída no console
+print("=== SISTEMA DE FUNÇÕES NATIVAS DRYAD ===");
+println();
+
+// 2. Informações do sistema
+print("Diretório atual: ");
+println(get_current_dir());
+
+// 3. Data/hora atual
+print("Timestamp atual: ");
+println(current_timestamp());
+
+// 4. Testando cores ANSI
+println(ansi_red("Texto em vermelho"));
+println(ansi_green("Texto em verde"));
+println(ansi_blue("Texto em azul"));
+
+// 5. Debug
+debug("Sistema de debug ativo");
+
+// 6. Teste de arquivo
+let arquivo_existe = file_exists("README.md");
+print("README.md existe: ");
+println(arquivo_existe);
+
+// 7. Conversão hexadecimal
+let numero = 255;
+let hex = to_hex(numero);
+print("255 em hexadecimal: ");
+println(hex);
+
+// 8. Hash SHA256 simples
+let dados = "Hello, Dryad!";
+let hash = sha256(dados);
+print("SHA256 de '");
+print(dados);
+print("': ");
+println(hash);
+
+println();
+println("Todas as funções nativas testadas com sucesso!");

@@ -1,0 +1,24 @@
+#<console_io>
+
+class Pessoa {
+    function init(nome, idade) {
+        this.nome = nome;
+        this.idade = idade;
+    }
+    
+    function apresentar() {
+        return "Meu nome é " + this.nome + " e tenho " + this.idade + " anos.";
+    }
+    
+    function aniversario() {
+        this.idade = this.idade + 1;
+        return "Agora tenho " + this.idade + " anos!";
+    }
+}
+
+// Criação de instâncias conforme documentação
+let pessoa1 = Pessoa("Ana", 25);
+let pessoa2 = Pessoa("Bruno", 30);
+
+println(pessoa1.apresentar()); // "Meu nome é Ana e tenho 25 anos."
+println(pessoa2.aniversario()); // "Agora tenho 31 anos!"
