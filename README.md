@@ -1,9 +1,16 @@
 # Dryad Programming Language
 
+<<<<<<< HEAD
 Dryad é uma linguagem de programação moderna, interpretada, com sintaxe expressiva e tipagem dinâmica.
+=======
+![Dryad Logo](https://img.shields.io/badge/Dryad-v0.1.0-green)
+![Oak Package Manager](https://img.shields.io/badge/Oak-Modular-blue)
+![License](https://img.shields.io/badge/License-MIT-blue)
+>>>>>>> 500814481b729ea2558fa5c85f963935a7b97545
 
 ## 🎯 Pilares de Desenvolvimento
 
+<<<<<<< HEAD
 1. **Test-Driven Development (TDD)** - Cada funcionalidade possui testes abrangentes
 2. **Sistema de Erros Padronizado** - Códigos de erro categorizados e documentados
 3. **CLI Intuitivo** - Interface de linha de comando rica em funcionalidades
@@ -12,6 +19,86 @@ Dryad é uma linguagem de programação moderna, interpretada, com sintaxe expre
 6. **Completude sem Complexidade** - Código completo mas sem over-engineering
 
 ## 📦 Estrutura do Projeto
+=======
+
+## ✨ Principais Características
+
+- 🚀 **Sintaxe Simples**: Fácil de aprender e usar
+- 📦 **Sistema Oak**: Package manager modular integrado
+- 🔗 **Imports/Exports**: Sistema modular avançado (`using` vs `use`)
+- 📚 **Common Libraries**: Bibliotecas nativas organizadas
+- ⚡ **Performance**: Interpretador otimizado em Rust
+- 🛠️ **CLI Moderna**: Interface de linha de comando completa
+- 🔧 **APIs Externas**: Suporte para modificação do oak package manager e cli.
+
+## 🚀 Início Rápido
+
+### 1. Instalação
+
+```bash
+# Clone o repositório
+git clone https://github.com/dryad-lang/dryad.git
+cd dryad
+
+# Compile o projeto
+cargo build --release
+
+# Execute um script
+./target/release/dryad script.dryad
+```
+
+### 2. Primeiro Programa
+
+```dryad
+// hello.dryad
+print("Hello, Dryad!");
+
+let nome = "Mundo";
+print("Olá, " + nome + "!");
+
+// Classes com métodos estáticos
+class Math {
+    static function square(x) {
+        return x * x;
+    }
+}
+
+let resultado = Math.square(5);
+print("5² = " + resultado);
+```
+
+### 3. Sistema Oak (Package Manager)
+
+```bash
+# Inicializar projeto Oak
+dryad oak init
+
+# Listar dependências
+dryad oak list
+
+# Adicionar dependência (futuro)
+dryad oak add math-utils
+```
+
+### 4. Sistema de Imports
+
+```dryad
+// Bibliotecas do sistema (using)
+using IO.Console;
+using Core.Types;
+
+// Arquivos locais (use)
+use './utils/helper.dryad';
+use '../shared/common.dryad';
+
+// Uso das funcionalidades
+Console.println("Hello World!");
+let type = Types.typeof(42);
+helper.processData();
+```
+
+## 📁 Estrutura do Projeto
+>>>>>>> 500814481b729ea2558fa5c85f963935a7b97545
 
 ```
 dryad/
